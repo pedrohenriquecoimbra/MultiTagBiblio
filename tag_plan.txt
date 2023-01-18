@@ -1,0 +1,12 @@
+I - Absorption d'azote minéral du sol vers la racine
+_A - Les formes d'azotes considérées
+_B - Les compartiments considérés
+_C - Les transporteurs et leur régulation
+_D - La cinétique d'absorption
+__1. Une double cinétique d'absorption
+___a. HATS et LATS
+___b. Phosphorilations
+___c. Contrôles
+_E - La surface d'échange considérée
+__1. La surface apoplastique
+__2. L'épaississement de l'endoderme avec l'âge
