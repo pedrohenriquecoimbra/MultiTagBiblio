@@ -50,13 +50,20 @@ class Biblio:
             command=self.add_plan)
         self.add_tag_but.place(x=70, y=500)
 
+        self.take_note_but = Button(
+            window,
+            text='Take notes',
+            height=1,
+            width=10)
+        self.take_note_but.place(x=1300, y=650)
+
         self.save_note_but = Button(
             window,
             text='Save',
             height=1,
             width=10,
             command=self.notes_from_plan)
-        self.save_note_but.place(x=1300, y=650)
+        self.save_note_but.place(x=1300, y=700)
 
         self.del_tag_but = Button(
             window,
@@ -191,21 +198,42 @@ class Biblio:
                 selected += [self.blocs["text"][k]]
 
         deleted = 0
-        for l in range(len(selected) - 1):
+        for l in range(len(selected)):
             k = l - deleted
-            self.blocs_listbox.itemconfig(k, bg='green')
-            if self.merge_var.get() == 1:
-                next = self.blocs["text"].index(selected[k + 1])
-                self.merge_var.set(0)
-            else:
-                add_tag = self.blocs["text"].index(selected[k])
-                next = self.blocs["text"].index(selected[k + 1])
+            # Color current focus bloc
+            self.blocs_listbox.itemconfig(l, bg='green')
+            # Show text in shell
             self.shell_text.delete('1.0', "end-1c")
-            self.shell_text.insert(END, self.blocs["text"][add_tag] + '\n\nNext : \n\n' + self.blocs["text"][next])
+
+            if self.merge_var.get() == 0:
+                add_tag = self.blocs["text"].index(selected[k])
+            if l < len(selected) - 1:
+                next = self.blocs["text"].index(selected[k + 1])
+                self.shell_text.insert(END, self.blocs["text"][add_tag] + '\n\nNext : \n\n' + self.blocs["text"][next])
+            else:
+                self.shell_text.insert(END, self.blocs["text"][add_tag])
+            self.merge_var.set(0)
+
+            # Show existing tags
+            # Reset colors
+            for k in self.plan["position"]:
+                self.plan_listbox.itemconfig(k, bg='white')
+            # Color existing tags
+            for j in range(len(self.blocs["text"])):
+                if self.blocs["text"][j] == self.blocs["text"][add_tag]:
+                    for i in self.blocs["tag"][j]:
+                        for m in range(len(self.plan["ID"])):
+                            if i[1] == self.plan["ID"][m]:
+                                self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
+            # Wait for button press
             self.tag_next_but.wait_variable(self.var)
             if self.merge_var.get() == 1:
                 deleted += 1
+                # Merge text
                 self.blocs["text"][add_tag] += self.blocs["text"][next]
+                # Merge existing tags
+                self.blocs["tag"][add_tag] += self.blocs["tag"][next]
+
                 del selected[k + 1]
                 del self.blocs["text"][next]
                 del self.blocs["source"][next]
@@ -215,15 +243,25 @@ class Biblio:
                 self.blocs = self.import_dict(self.p, 'blocs')
 
             add = []
-            tag = self.plan_listbox.curselection()
-            for i in tag:
-                id = self.plan["ID"][self.plan["position"].index(i)]
-                for j in self.tag_list:
-                    print(id, j)
-                    if j[1] == id:
-                        add += [j]
+            focus = self.plan_listbox.curselection()
+            # if a tag selection has been made
+            if len(focus) > 0 :
+                tag = [focus[0]]
+                # To associate bloc to selected tag but also his parents.
+                for k in range(self.plan["order"][self.plan["position"].index(tag[0])]):
+                    tag += [self.get_parent(tag[-1])]
+                for i in tag:
+                    id = self.plan["ID"][self.plan["position"].index(i)]
+                    for j in self.tag_list:
+                        if j[1] == id:
+                            add += [j]
 
-            self.blocs["tag"][add_tag] += add
+                self.blocs["tag"][add_tag] += add
+                unique_tags = []
+                for n in self.blocs["tag"][add_tag]:
+                    if n not in unique_tags:
+                        unique_tags += [n]
+                self.blocs["tag"][add_tag] = unique_tags
 
         self.save_dict(self.p, 'blocs', self.blocs)
         self.blocs = self.import_dict(self.p, 'blocs')
@@ -232,6 +270,13 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
 
         self.tagging = 0
+
+    def get_parent(self, position):
+        parent = []
+        for k in range(len(self.plan["position"])):
+            if self.plan["position"][k] < position and self.plan["order"][k] == self.plan["order"][self.plan["position"].index(position)] - 1:
+                parent += [self.plan["position"][k]]
+        return max(parent)
 
     def access_from_plan(self):
         # to be called as soon as pressed
