@@ -20,11 +20,13 @@ class Biblio:
 
         self.merge_var = IntVar()
 
+        self.save_var = IntVar()
+
         self.merge_tick = Checkbutton(
             window,
             text='Merge ?',
             variable=self.merge_var)
-        self.merge_tick.place(x=800, y=500)
+        self.merge_tick.place(x=1300, y=500)
 
         self.input_but = Button(
             window,
@@ -32,7 +34,7 @@ class Biblio:
             height=1,
             width=10,
             command=self.add_to_blocs)
-        self.input_but.place(x=500, y=500)
+        self.input_but.place(x=420, y=500)
 
         self.tag_but = Button(
             window,
@@ -40,7 +42,7 @@ class Biblio:
             height=1,
             width=10,
             command=self.tag_blocs)
-        self.tag_but.place(x=600, y=500)
+        self.tag_but.place(x=1100, y=500)
 
         self.add_tag_but = Button(
             window,
@@ -54,7 +56,8 @@ class Biblio:
             window,
             text='Take notes',
             height=1,
-            width=10)
+            width=10,
+            command=self.edit_notes_from_plan)
         self.take_note_but.place(x=1300, y=650)
 
         self.save_note_but = Button(
@@ -62,7 +65,7 @@ class Biblio:
             text='Save',
             height=1,
             width=10,
-            command=self.notes_from_plan)
+            command=lambda: self.save_var.set(1))
         self.save_note_but.place(x=1300, y=700)
 
         self.del_tag_but = Button(
@@ -87,7 +90,15 @@ class Biblio:
             height=1,
             width=10,
             command=lambda: self.var.set(1))
-        self.tag_next_but.place(x=700, y=500)
+        self.tag_next_but.place(x=1200, y=500)
+
+        self.search_but = Button(
+            window,
+            text='Search all',
+            height=1,
+            width=10,
+            command=self.blocs_filter_search)
+        self.search_but.place(x=810, y=500)
 
         self.plan_listbox = Listbox(
             window,
@@ -117,6 +128,12 @@ class Biblio:
             selectmode=EXTENDED)
         self.blocs_listbox.place(x=550, y=10)
         self.blocs_listbox.bind('<<ListboxSelect>>', self.read_blocs)
+
+        self.search_text = Text(
+            window,
+            height=1,
+            width=30)
+        self.search_text.place(x=550, y=500)
 
         self.shell_text = Text(
             window,
@@ -371,9 +388,13 @@ class Biblio:
             new = self.build_plan()
             self.plan_listbox.insert(self.plan["position"][k], new[k])
 
-    def notes_from_plan(self):
-        # to be called on edit button press
+    def edit_notes_from_plan(self):
+        # Get corresponding notes
         pos = self.plan["position"].index(self.plan_listbox.curselection()[0])
+        self.notes_text.delete('1.0', "end-1c")
+        self.notes_text.insert("1.0", self.plan["note"][pos])
+        # Wait for save button press
+        self.save_note_but.wait_variable(self.save_var)
         note = self.notes_text.get("1.0", "end-1c")
         self.plan["note"][pos] = note
 
@@ -401,8 +422,8 @@ class Biblio:
                 for k in sources:
                     self.source_listbox.insert(END, k)
                 # Get corresponding notes
-                self.notes_text.delete('1.0', "end-1c")
-                self.notes_text.insert("1.0", self.plan["note"][pos])
+                #self.notes_text.delete('1.0', "end-1c")
+                #self.notes_text.insert("1.0", self.plan["note"][pos])
 
     def blocs_filter_sources(self, event):
         pos = self.source_listbox.curselection()[0]
@@ -414,6 +435,14 @@ class Biblio:
         self.blocs_listbox.delete(0, END)
         for k in selected:
             self.blocs_listbox.insert(END, k)
+
+    def blocs_filter_search(self):
+        self.blocs_listbox.delete(0, END)
+        request = self.search_text.get("1.0", "end-1c")
+        for k in self.blocs["text"]:
+            if request in k:
+                self.blocs_listbox.insert(END, k)
+
 
     def read_blocs(self, event):
         # Reset widgets
