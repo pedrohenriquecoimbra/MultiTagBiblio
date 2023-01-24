@@ -48,28 +48,32 @@ class Biblio:
             window,
             text='^',
             height=1,
-            width=3)
+            width=3,
+            command=self.move_up_plan)
         self.up_but.place(x=70, y=493)
 
         self.down_but = Button(
             window,
             text='v',
             height=1,
-            width=3)
+            width=3,
+            command=self.move_down_plan)
         self.down_but.place(x=70, y=520)
 
         self.left_but = Button(
             window,
             text='<',
             height=1,
-            width=3)
+            width=3,
+            command=self.move_left_plan)
         self.left_but.place(x=40, y=505)
 
         self.right_but = Button(
             window,
             text='>',
             height=1,
-            width=3)
+            width=3,
+            command=self.move_right_plan)
         self.right_but.place(x=102, y=505)
 
         self.add_tag_but = Button(
@@ -87,14 +91,6 @@ class Biblio:
             width=10,
             command=self.edit_notes_from_plan)
         self.take_note_but.place(x=1300, y=650)
-
-        self.save_note_but = Button(
-            window,
-            text='Save',
-            height=1,
-            width=10,
-            command=lambda: self.save_var.set(1))
-        self.save_note_but.place(x=1300, y=700)
 
         self.del_tag_but = Button(
             window,
@@ -127,6 +123,21 @@ class Biblio:
             width=10,
             command=self.blocs_filter_search)
         self.search_but.place(x=810, y=500)
+
+        self.save_note_but = Button(
+            window,
+            text='Save',
+            height=1,
+            width=10,
+            command=lambda: self.save_var.set(1))
+        self.save_note_but.place(x=1300, y=700)
+
+        self.export_but = Button(
+            window,
+            text='Export all',
+            height=1,
+            width=10)
+        self.export_but.place(x=1400, y=800)
 
         self.plan_listbox = Listbox(
             window,
@@ -196,11 +207,13 @@ class Biblio:
         return tl
 
     def build_plan(self):
-        title = [['I. ', 'II. ', 'III. ', 'IV. ', 'V. ', 'VI. ', 'VII. '],
-                    ['A. ', 'B. ', 'C. ', 'D. ', 'E. ', 'F. ', 'G. '],
-                    ['1. ', '2. ', '3. ', '4. ', '5. ', '6. ', '7. '],
-                    ['a. ', 'b. ', 'c. ', 'd. ', 'e. ', 'f. ', 'g. ']]
-        ct = [0, 0, 0, 0]
+        title = [['I. ', 'II. ', 'III. ', 'IV. ', 'V. ', 'VI. ', 'VII. ', 'VIII. ', 'IX. ', 'X. '],
+                    ['A. ', 'B. ', 'C. ', 'D. ', 'E. ', 'F. ', 'G. ', 'H. ', 'I. ', 'J. '],
+                    ['1. ', '2. ', '3. ', '4. ', '5. ', '6. ', '7. ', '8. ', '9. ', '10. '],
+                    ['a. ', 'b. ', 'c. ', 'd. ', 'e. ', 'f. ', 'g. ', 'h. ', 'i. ', 'j. '],
+                    ['i. ', 'ii. ', 'iii. ', 'iv. ', 'v. ', 'vi. ', 'vii. ', 'viii. ', 'ix. ', 'x. '],
+                    ['-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ']]
+        ct = [0, 0, 0, 0, 0, 0]
         built_plan = []
         for k in range(len(self.plan["position"])):
             for l in self.tag_list:
@@ -210,6 +223,74 @@ class Biblio:
                     ct[order] += 1
                     break
         return built_plan
+
+    def move_left_plan(self):
+        pos = self.plan_listbox.curselection()
+        for j in pos:
+            for k in range(len(self.plan["position"])):
+                if j == self.plan["position"][k] and self.plan["order"][k] != 0:
+                    self.plan["order"][k] -= 1
+
+        self.plan_listbox.delete(0, END)
+        for k in range(len(self.plan["position"])):
+            new = self.build_plan()
+            self.plan_listbox.insert(self.plan["position"][k], new[k])
+
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
+
+    def move_right_plan(self):
+        pos = self.plan_listbox.curselection()
+        for j in pos:
+            for k in range(len(self.plan["position"])):
+                if j == self.plan["position"][k] and self.plan["order"][k] != 5:
+                    self.plan["order"][k] += 1
+
+        self.plan_listbox.delete(0, END)
+        for k in range(len(self.plan["position"])):
+            new = self.build_plan()
+            self.plan_listbox.insert(self.plan["position"][k], new[k])
+
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
+
+    def move_up_plan(self):
+        pos = self.plan_listbox.curselection()[0]
+        for k in range(len(self.plan["position"])):
+            if pos == self.plan["position"][k]:
+                current = k
+            elif pos - 1 == self.plan["position"][k]:
+                target = k
+        tp = self.plan["position"][target]
+        self.plan["position"][target] = self.plan["position"][current]
+        self.plan["position"][current] = tp
+
+        self.plan_listbox.delete(0, END)
+        for k in range(len(self.plan["position"])):
+            new = self.build_plan()
+            self.plan_listbox.insert(self.plan["position"][k], new[k])
+
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
+
+    def move_down_plan(self):
+        pos = self.plan_listbox.curselection()[0]
+        for k in range(len(self.plan["position"])):
+            if pos == self.plan["position"][k]:
+                current = k
+            elif pos + 1 == self.plan["position"][k]:
+                target = k
+        tp = self.plan["position"][target]
+        self.plan["position"][target] = self.plan["position"][current]
+        self.plan["position"][current] = tp
+
+        self.plan_listbox.delete(0, END)
+        for k in range(len(self.plan["position"])):
+            new = self.build_plan()
+            self.plan_listbox.insert(self.plan["position"][k], new[k])
+
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
 
     def add_to_blocs(self):
         # to edit existing tags on a bloc, recall this function for just 1 bloc
