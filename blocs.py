@@ -196,11 +196,18 @@ class Biblio:
         return tl
 
     def build_plan(self):
+        title = [['I. ', 'II. ', 'III. ', 'IV. ', 'V. ', 'VI. ', 'VII. '],
+                    ['A. ', 'B. ', 'C. ', 'D. ', 'E. ', 'F. ', 'G. '],
+                    ['1. ', '2. ', '3. ', '4. ', '5. ', '6. ', '7. '],
+                    ['a. ', 'b. ', 'c. ', 'd. ', 'e. ', 'f. ', 'g. ']]
+        ct = [0, 0, 0, 0]
         built_plan = []
         for k in range(len(self.plan["position"])):
             for l in self.tag_list:
                 if self.plan["ID"][k] == l[1]:
-                    built_plan += ['___' * self.plan["order"][k] + l[0]]
+                    order = self.plan["order"][k]
+                    built_plan += ['___' * order + title[order][ct[order]] + l[0]]
+                    ct[order] += 1
                     break
         return built_plan
 
