@@ -44,13 +44,41 @@ class Biblio:
             command=self.tag_blocs)
         self.tag_but.place(x=1100, y=500)
 
+        self.up_but = Button(
+            window,
+            text='^',
+            height=1,
+            width=3)
+        self.up_but.place(x=70, y=493)
+
+        self.down_but = Button(
+            window,
+            text='v',
+            height=1,
+            width=3)
+        self.down_but.place(x=70, y=520)
+
+        self.left_but = Button(
+            window,
+            text='<',
+            height=1,
+            width=3)
+        self.left_but.place(x=40, y=505)
+
+        self.right_but = Button(
+            window,
+            text='>',
+            height=1,
+            width=3)
+        self.right_but.place(x=102, y=505)
+
         self.add_tag_but = Button(
             window,
             text='Add',
             height=1,
-            width=10,
+            width=7,
             command=self.add_plan)
-        self.add_tag_but.place(x=70, y=500)
+        self.add_tag_but.place(x=150, y=500)
 
         self.take_note_but = Button(
             window,
@@ -72,17 +100,17 @@ class Biblio:
             window,
             text='Delete',
             height=1,
-            width=10,
+            width=7,
             command=self.delete_plan)
-        self.del_tag_but.place(x=160, y=500)
+        self.del_tag_but.place(x=220, y=500)
 
         self.edit_tag_but = Button(
             window,
             text='Edit',
             height=1,
-            width=10,
+            width=7,
             command=self.edit_plan)
-        self.edit_tag_but.place(x=250, y=500)
+        self.edit_tag_but.place(x=290, y=500)
 
         self.tag_next_but = Button(
             window,
@@ -135,11 +163,14 @@ class Biblio:
             width=30)
         self.search_text.place(x=550, y=500)
 
+        self.shell_label = Label(window, text="Shell :")
+        self.shell_label.place(x=1000, y=10)
+
         self.shell_text = Text(
             window,
-            height=30,
+            height=28,
             width=60)
-        self.shell_text.place(x=1000, y=10)
+        self.shell_text.place(x=1000, y=40)
 
         self.notes_text = Text(
             window,
@@ -175,16 +206,23 @@ class Biblio:
 
     def add_to_blocs(self):
         # to edit existing tags on a bloc, recall this function for just 1 bloc
-        sep = input("Extracts separator : ")
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Extracts separator :')
+        self.tag_next_but.wait_variable(self.var)
+        sep = self.shell_text.get("1.0", "end-1c")
         if sep in self.blocs["source"]:
-            print('Already added')
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Already added!')
             return None
         else:
-            input('Paste?')
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Paste?')
+            self.tag_next_but.wait_variable(self.var)
             article = pyperclip.paste().replace('\r', '')
 
             if sep not in article or len(sep) == 0:
-                print("Veuillez reessayer, separateur introuvable")
+                self.shell_text.delete("1.0", "end-1c")
+                self.shell_label.configure(text='Veuillez réessayer, séparateur introuvable.')
                 return None
 
             bloc_s = 0
@@ -196,6 +234,10 @@ class Biblio:
                 self.blocs['tag'] += [[]]
                 # shorten the string for the index function to find the next occurrence
                 article = article[bloc_e + len(sep):]
+
+            # Reset shell
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Extracts separator :')
 
             self.save_dict(self.p, 'blocs', self.blocs)
             self.blocs = self.import_dict(self.p, 'blocs')
@@ -307,22 +349,34 @@ class Biblio:
 
     def add_plan(self):
         # to be called on edit button press
-        new_tag = input('New category? : ')
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='New category? :')
+        self.tag_next_but.wait_variable(self.var)
+        new_tag = self.shell_text.get("1.0", "end-1c")
         if new_tag not in [j[0] for j in self.tag_list]:
             if len(self.plan["ID"]) == 0:
                 new_ID = 1
             else:
                 new_ID = max(self.plan["ID"]) + 1
             self.plan["ID"] += [new_ID]
-            position = int(input('position : '))
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='position :')
+            self.tag_next_but.wait_variable(self.var)
+            position = int(self.shell_text.get("1.0", "end-1c"))
             if position in self.plan["position"]:
                 for k in range(len(self.plan["position"])):
                     if position <= self.plan["position"][k]:
                         self.plan["position"][k] += 1
             self.plan["position"] += [position]
-            self.plan["order"] += [int(input('order : '))]
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='order :')
+            self.tag_next_but.wait_variable(self.var)
+            self.plan["order"] += [int(self.shell_text.get("1.0", "end-1c"))]
             self.plan["note"] += ['']
             self.blocs["tag"][0] += [[new_tag, new_ID]]
+
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Shell :')
 
             self.save_dict(self.p, 'blocs', self.blocs)
             self.blocs = self.import_dict(self.p, 'blocs')
@@ -371,7 +425,14 @@ class Biblio:
 
     def edit_plan(self):
         pos = self.plan_listbox.curselection()[0]
-        new_name = input("Change name to : ")
+        # Ask user input
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Change name to :')
+        self.tag_next_but.wait_variable(self.var)
+        new_name = self.shell_text.get("1.0", "end-1c")
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Shell :')
+
         for k in range(len(self.plan["position"])):
             if pos == self.plan["position"][k]:
                 id = self.plan["ID"][k]
@@ -380,7 +441,6 @@ class Biblio:
             for j in range(len(self.blocs["tag"][k])):
                 if self.blocs["tag"][k][j][1] == id:
                     self.blocs["tag"][k][j][0] = new_name
-        print(self.blocs["tag"])
 
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan_listbox.delete(0, END)
@@ -442,7 +502,6 @@ class Biblio:
         for k in self.blocs["text"]:
             if request in k:
                 self.blocs_listbox.insert(END, k)
-
 
     def read_blocs(self, event):
         # Reset widgets
