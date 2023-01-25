@@ -1,9 +1,12 @@
-# IMPORTS
+# Imports
 
 from tkinter import *
 import pickle
+import os
 import pyperclip
 import numpy as np
+
+# Functions
 
 
 class Biblio:
@@ -676,8 +679,25 @@ class Biblio:
                                     self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
 
 
+def init_dict():
+    p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage\\"
+    # Check whether the specified path exists or not
+    if not os.path.exists(p):
+        os.makedirs(p)
+        d = dict(text=['default'], source=['default'], tag=[[]])
+        with open(p + "blocs.pkl", 'wb') as f:
+            pickle.dump(d, f)
+
+        d = dict(position=[], ID=[], order=[], note=[])
+        with open(p + "plan.pkl", 'wb') as f:
+            pickle.dump(d, f)
+
+
+# Script
+
 win = Tk()
-win.title('Add to plan')
+win.title('Multi Tag Biblio')
 win.attributes("-fullscreen", True)
+init_dict()
 mt = Biblio(win)
 win.mainloop()

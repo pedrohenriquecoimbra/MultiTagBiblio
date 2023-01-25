@@ -1,10 +1,11 @@
 import pickle
-
+import os
 
 def restart_dict():
-    confirm = input("Are you sure you want to delete blocs and plan? (y/n)")
+    p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage\\"
+    confirm = input("Are you sure you want to (re)initialize blocs and plan? (y/n)")
     if confirm == 'y':
-        p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage\\"
+
         d = dict(text=['default'], source=['default'], tag=[[]])
         with open(p + "blocs.pkl", 'wb') as f:
             pickle.dump(d, f)
