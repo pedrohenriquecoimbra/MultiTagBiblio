@@ -189,6 +189,8 @@ class Biblio:
             width=150)
         self.notes_text.place(x=50, y=550)
 
+    # Dictionary management
+
     def import_dict(self, path, name):
         with open(path + '\\' + name + '.pkl', 'rb') as f:
             return pickle.load(f)
@@ -196,6 +198,8 @@ class Biblio:
     def save_dict(self, path, name, d):
         with open(path + '\\' + name + '.pkl', 'wb') as f:
             pickle.dump(d, f)
+
+    # Tag plan management
 
     def build_tag_list(self, blocs):
         tl = []
@@ -291,149 +295,6 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
-
-    def add_to_blocs(self):
-        # to edit existing tags on a bloc, recall this function for just 1 bloc
-        self.shell_text.delete("1.0", "end-1c")
-        self.shell_label.configure(text='Extracts separator :')
-        self.tag_next_but.wait_variable(self.var)
-        sep = self.shell_text.get("1.0", "end-1c")
-        if sep in self.blocs["source"]:
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Already added!')
-            return None
-        else:
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Paste?')
-            self.tag_next_but.wait_variable(self.var)
-            article = pyperclip.paste().replace('\r', '')
-
-            if sep not in article or len(sep) == 0:
-                self.shell_text.delete("1.0", "end-1c")
-                self.shell_label.configure(text='Veuillez réessayer, séparateur introuvable.')
-                return None
-
-            bloc_s = 0
-
-            for k in range(article.count(sep)):
-                bloc_e = article.index(sep)
-                self.blocs['text'] += [article[bloc_s:bloc_e].replace('\n', '').replace('\t', '')]
-                self.blocs['source'] += [sep]
-                self.blocs['tag'] += [[]]
-                # shorten the string for the index function to find the next occurrence
-                article = article[bloc_e + len(sep):]
-
-            # Reset shell
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Extracts separator :')
-
-            self.save_dict(self.p, 'blocs', self.blocs)
-            self.blocs = self.import_dict(self.p, 'blocs')
-
-            self.source_listbox.delete(0, END)
-            for k in np.unique(self.blocs["source"]):
-                self.source_listbox.insert(END, k)
-
-    def tag_blocs(self):
-        self.tagging = 1
-        self.tag_list = self.build_tag_list(self.blocs)
-        sep = self.source_listbox.get(self.source_listbox.curselection())
-        # create a selectable list of these tags, an ok button and an add button
-        selected = []
-        for k in range(len(self.blocs["text"])):
-            if self.blocs["source"][k] == sep:
-                selected += [self.blocs["text"][k]]
-
-        deleted = 0
-        for l in range(len(selected)):
-            k = l - deleted
-            # Color current focus bloc
-            self.blocs_listbox.itemconfig(l, bg='green')
-            # Show text in shell
-            self.shell_text.delete('1.0', "end-1c")
-
-            if self.merge_var.get() == 0:
-                add_tag = self.blocs["text"].index(selected[k])
-            if l < len(selected) - 1:
-                next = self.blocs["text"].index(selected[k + 1])
-                self.shell_text.insert(END, self.blocs["text"][add_tag] + '\n\nNext : \n\n' + self.blocs["text"][next])
-            else:
-                self.shell_text.insert(END, self.blocs["text"][add_tag])
-            self.merge_var.set(0)
-
-            # Show existing tags
-            # Reset colors
-            for k in self.plan["position"]:
-                self.plan_listbox.itemconfig(k, bg='white')
-            # Color existing tags
-            for j in range(len(self.blocs["text"])):
-                if self.blocs["text"][j] == self.blocs["text"][add_tag]:
-                    for i in self.blocs["tag"][j]:
-                        for m in range(len(self.plan["ID"])):
-                            if i[1] == self.plan["ID"][m]:
-                                self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
-            # Wait for button press
-            self.tag_next_but.wait_variable(self.var)
-            if self.merge_var.get() == 1:
-                deleted += 1
-                # Merge text
-                self.blocs["text"][add_tag] += self.blocs["text"][next]
-                # Merge existing tags
-                self.blocs["tag"][add_tag] += self.blocs["tag"][next]
-
-                del selected[k + 1]
-                del self.blocs["text"][next]
-                del self.blocs["source"][next]
-                del self.blocs["tag"][next]
-
-                self.save_dict(self.p, 'blocs', self.blocs)
-                self.blocs = self.import_dict(self.p, 'blocs')
-
-            add = []
-            focus = self.plan_listbox.curselection()
-            # if a tag selection has been made
-            if len(focus) > 0 :
-                tag = [focus[0]]
-                # To associate bloc to selected tag but also his parents.
-                for k in range(self.plan["order"][self.plan["position"].index(tag[0])]):
-                    tag += [self.get_parent(tag[-1])]
-                for i in tag:
-                    id = self.plan["ID"][self.plan["position"].index(i)]
-                    for j in self.tag_list:
-                        if j[1] == id:
-                            add += [j]
-
-                self.blocs["tag"][add_tag] += add
-                unique_tags = []
-                for n in self.blocs["tag"][add_tag]:
-                    if n not in unique_tags:
-                        unique_tags += [n]
-                self.blocs["tag"][add_tag] = unique_tags
-
-        self.save_dict(self.p, 'blocs', self.blocs)
-        self.blocs = self.import_dict(self.p, 'blocs')
-        self.tag_list = self.build_tag_list(self.blocs)
-        self.save_dict(self.p, 'plan', self.plan)
-        self.plan = self.import_dict(self.p, 'plan')
-
-        self.tagging = 0
-
-    def get_parent(self, position):
-        parent = []
-        for k in range(len(self.plan["position"])):
-            if self.plan["position"][k] < position and self.plan["order"][k] == self.plan["order"][self.plan["position"].index(position)] - 1:
-                parent += [self.plan["position"][k]]
-        return max(parent)
-
-    def access_from_plan(self):
-        # to be called as soon as pressed
-        # get selected from list
-        position_selected = 0
-        blocs_selected = []
-        for k in range(len(self.blocs["tag"])):
-            for l in range(len(self.blocs["tag"][k])):
-                if self.plan["ID"][position_selected] == self.blocs["tag"][k][l]:
-                    blocs_selected += [self.blocs["text"][k]]
 
     def add_plan(self):
         # to be called on edit button press
@@ -549,6 +410,199 @@ class Biblio:
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
 
+    # Blocs management
+
+    def add_to_blocs(self):
+        # to edit existing tags on a bloc, recall this function for just 1 bloc
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Extracts separator :')
+        self.tag_next_but.wait_variable(self.var)
+        sep = self.shell_text.get("1.0", "end-1c")
+        if sep in self.blocs["source"]:
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Already added!')
+            return None
+        else:
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Paste?')
+            self.tag_next_but.wait_variable(self.var)
+            article = pyperclip.paste().replace('\r', '')
+
+            if sep not in article or len(sep) == 0:
+                self.shell_text.delete("1.0", "end-1c")
+                self.shell_label.configure(text='Veuillez réessayer, séparateur introuvable.')
+                return None
+
+            bloc_s = 0
+
+            for k in range(article.count(sep)):
+                bloc_e = article.index(sep)
+                self.blocs['text'] += [article[bloc_s:bloc_e].replace('\n', '').replace('\t', '')]
+                self.blocs['source'] += [sep]
+                self.blocs['tag'] += [[]]
+                # shorten the string for the index function to find the next occurrence
+                article = article[bloc_e + len(sep):]
+
+            # Reset shell
+            self.shell_text.delete("1.0", "end-1c")
+            self.shell_label.configure(text='Extracts separator :')
+
+            self.save_dict(self.p, 'blocs', self.blocs)
+            self.blocs = self.import_dict(self.p, 'blocs')
+
+            self.source_listbox.delete(0, END)
+            for k in np.unique(self.blocs["source"]):
+                self.source_listbox.insert(END, k)
+
+    def tag_blocs(self):
+        self.tagging = 1
+        self.tag_list = self.build_tag_list(self.blocs)
+        selected = []
+        source = self.source_listbox.curselection()
+        if len(source) == 0:
+            current = self.blocs_listbox.curselection()
+            for k in current:
+                selected += [self.blocs_listbox.get(k)]
+
+            for k in range(len(current)):
+                # Show text in shell
+                self.shell_text.delete('1.0', "end-1c")
+                self.blocs_listbox.itemconfig(current[k], bg='green')
+                self.plan_listbox.selection_clear(0, END)
+                add_tag = self.blocs["text"].index(selected[k])
+                self.shell_text.insert(END, self.blocs["text"][add_tag])
+                # Show existing tags
+                # Reset colors
+                for p in self.plan["position"]:
+                    self.plan_listbox.itemconfig(p, bg='white')
+                # Color existing tags
+                for j in range(len(self.blocs["text"])):
+                    if self.blocs["text"][j] == self.blocs["text"][add_tag]:
+                        for i in self.blocs["tag"][j]:
+                            for m in range(len(self.plan["ID"])):
+                                if i[1] == self.plan["ID"][m]:
+                                    self.plan_listbox.select_set(self.plan["position"][m])
+                                    # switch to select set
+                # Wait for button press
+                self.tag_next_but.wait_variable(self.var)
+                self.blocs_listbox.itemconfig(current[k], bg='white')
+                add = []
+                focus = self.plan_listbox.curselection()
+                # if a tag selection has been made
+                if len(focus) > 0:
+                    for m in focus:
+                        tag = [m]
+                        # To associate bloc to selected tag but also his parents.
+                        for o in range(self.plan["order"][self.plan["position"].index(tag[0])]):
+                            tag += [self.get_parent(tag[-1])]
+                        for i in tag:
+                            id = self.plan["ID"][self.plan["position"].index(i)]
+                            for j in self.tag_list:
+                                if j[1] == id:
+                                    add += [j]
+
+                    self.blocs["tag"][add_tag] = add
+
+        else:
+            sep = self.source_listbox.get(source)
+            for k in range(len(self.blocs["text"])):
+                if self.blocs["source"][k] == sep:
+                    selected += [self.blocs["text"][k]]
+
+            deleted = 0
+            for l in range(len(selected)):
+                k = l - deleted
+                # Color current focus block
+                self.blocs_listbox.itemconfig(l, bg='green')
+                # Show text in shell
+                self.shell_text.delete('1.0', "end-1c")
+
+                if self.merge_var.get() == 0:
+                    add_tag = self.blocs["text"].index(selected[k])
+                if l < len(selected) - 1:
+                    next = self.blocs["text"].index(selected[k + 1])
+                    self.shell_text.insert(END, self.blocs["text"][add_tag] + '\n\nNext : \n\n' + self.blocs["text"][next])
+                else:
+                    self.shell_text.insert(END, self.blocs["text"][add_tag])
+                self.merge_var.set(0)
+
+                # Show existing tags
+                # Reset colors
+                for k in self.plan["position"]:
+                    self.plan_listbox.itemconfig(k, bg='white')
+                # Color existing tags
+                for j in range(len(self.blocs["text"])):
+                    if self.blocs["text"][j] == self.blocs["text"][add_tag]:
+                        for i in self.blocs["tag"][j]:
+                            for m in range(len(self.plan["ID"])):
+                                if i[1] == self.plan["ID"][m]:
+                                    self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
+                # Wait for button press
+                self.tag_next_but.wait_variable(self.var)
+                if self.merge_var.get() == 1:
+                    deleted += 1
+                    # Merge text
+                    self.blocs["text"][add_tag] += self.blocs["text"][next]
+                    # Merge existing tags
+                    self.blocs["tag"][add_tag] += self.blocs["tag"][next]
+
+                    del selected[k + 1]
+                    del self.blocs["text"][next]
+                    del self.blocs["source"][next]
+                    del self.blocs["tag"][next]
+
+                    self.save_dict(self.p, 'blocs', self.blocs)
+                    self.blocs = self.import_dict(self.p, 'blocs')
+
+                add = []
+                focus = self.plan_listbox.curselection()
+                # if a tag selection has been made
+                if len(focus) > 0 :
+                    for m in focus:
+                        tag = [m]
+                        # To associate bloc to selected tag but also his parents.
+                        for k in range(self.plan["order"][self.plan["position"].index(tag[0])]):
+                            tag += [self.get_parent(tag[-1])]
+                        for i in tag:
+                            id = self.plan["ID"][self.plan["position"].index(i)]
+                            for j in self.tag_list:
+                                if j[1] == id:
+                                    add += [j]
+
+                    self.blocs["tag"][add_tag] += add
+                    unique_tags = []
+                    for n in self.blocs["tag"][add_tag]:
+                        if n not in unique_tags:
+                            unique_tags += [n]
+                    self.blocs["tag"][add_tag] = unique_tags
+
+        self.save_dict(self.p, 'blocs', self.blocs)
+        self.blocs = self.import_dict(self.p, 'blocs')
+        self.tag_list = self.build_tag_list(self.blocs)
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
+
+        self.tagging = 0
+
+    def get_parent(self, position):
+        parent = []
+        for k in range(len(self.plan["position"])):
+            if self.plan["position"][k] < position and self.plan["order"][k] == self.plan["order"][self.plan["position"].index(position)] - 1:
+                parent += [self.plan["position"][k]]
+        return max(parent)
+
+    # Blocs visualization filters
+
+    def access_from_plan(self):
+        # to be called as soon as pressed
+        # get selected from list
+        position_selected = 0
+        blocs_selected = []
+        for k in range(len(self.blocs["tag"])):
+            for l in range(len(self.blocs["tag"][k])):
+                if self.plan["ID"][position_selected] == self.blocs["tag"][k][l]:
+                    blocs_selected += [self.blocs["text"][k]]
+
     def blocs_filter_plan(self, event):
         if self.tagging == 0:
             cursor = self.plan_listbox.curselection()
@@ -592,27 +646,28 @@ class Biblio:
                 self.blocs_listbox.insert(END, k)
 
     def read_blocs(self, event):
-        # Reset widgets
-        self.shell_text.delete('1.0', "end-1c")
-        for k in [list(np.unique(self.blocs["source"])).index(l) for l in self.blocs["source"]]:
-            self.source_listbox.itemconfig(k, bg="white")
-        for k in self.plan["position"]:
-            self.plan_listbox.itemconfig(k, bg='white')
+        if self.tagging == 0:
+            # Reset widgets
+            self.shell_text.delete('1.0', "end-1c")
+            for k in [list(np.unique(self.blocs["source"])).index(l) for l in self.blocs["source"]]:
+                self.source_listbox.itemconfig(k, bg="white")
+            for k in self.plan["position"]:
+                self.plan_listbox.itemconfig(k, bg='white')
 
-        for i in self.blocs_listbox.curselection():
-            # Display in shell
-            self.shell_text.insert(END, self.blocs_listbox.get(i) + '\n----\n')
+            for i in self.blocs_listbox.curselection():
+                # Display in shell
+                self.shell_text.insert(END, self.blocs_listbox.get(i) + '\n----\n')
 
-            # Show corresponding tags and sources
-            for j in range(len(self.blocs["text"])):
-                if self.blocs["text"][j] == self.blocs_listbox.get(i):
-                    source = self.blocs["source"][j]
-                    self.source_listbox.itemconfig(list(np.unique(self.blocs["source"])).index(source), bg='green')
+                # Show corresponding tags and sources
+                for j in range(len(self.blocs["text"])):
+                    if self.blocs["text"][j] == self.blocs_listbox.get(i):
+                        source = self.blocs["source"][j]
+                        self.source_listbox.itemconfig(list(np.unique(self.blocs["source"])).index(source), bg='green')
 
-                    for k in self.blocs["tag"][j]:
-                        for m in range(len(self.plan["ID"])):
-                            if k[1] == self.plan["ID"][m]:
-                                self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
+                        for k in self.blocs["tag"][j]:
+                            for m in range(len(self.plan["ID"])):
+                                if k[1] == self.plan["ID"][m]:
+                                    self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
 
 
 win = Tk()
