@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="64d7e7ff-86fd-45b3-a10e-c5c7a4961f21" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Storage/blocs.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/Storage/blocs.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Storage/plan.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/Storage/plan.pkl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
