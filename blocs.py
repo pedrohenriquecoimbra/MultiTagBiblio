@@ -227,8 +227,10 @@ class Biblio:
                     built_plan[self.plan["position"][k]] = '___' * order + title[order][ct[order]] + l[0]
                     ct[order] += 1
                     if p < len(self.plan["position"])-1:
-                        if order > self.plan["order"][self.plan["position"].index(p+1)]:
-                            ct[order] = 0
+                        diff = order - self.plan["order"][self.plan["position"].index(p+1)]
+                        if diff > 0:
+                            for j in range(diff):
+                                ct[order - j] = 0
                     break
         return built_plan
 
