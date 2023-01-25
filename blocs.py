@@ -12,7 +12,8 @@ import numpy as np
 class Biblio:
 
     def __init__(self, window):
-        self.p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage"
+        cwd = os.getcwd()
+        self.p = cwd + "\\Storage"
         self.blocs = self.import_dict(self.p, 'blocs')
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan = self.import_dict(self.p, 'plan')
@@ -406,6 +407,12 @@ class Biblio:
         for k in range(len(new)):
             self.plan_listbox.insert(k, new[k])
 
+        self.save_dict(self.p, 'blocs', self.blocs)
+        self.blocs = self.import_dict(self.p, 'blocs')
+        self.tag_list = self.build_tag_list(self.blocs)
+        self.save_dict(self.p, 'plan', self.plan)
+        self.plan = self.import_dict(self.p, 'plan')
+
     def edit_notes_from_plan(self):
         # Get corresponding notes
         pos = self.plan["position"].index(self.plan_listbox.curselection()[0])
@@ -680,7 +687,8 @@ class Biblio:
 
 
 def init_dict():
-    p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage\\"
+    cwd = os.getcwd()
+    p = cwd + "\\Storage"
     # Check whether the specified path exists or not
     if not os.path.exists(p):
         os.makedirs(p)
