@@ -146,8 +146,8 @@ class Biblio:
             selectmode=EXTENDED)
         self.plan_listbox.place(x=50, y=10)
         new = self.build_plan()
-        for k in range(len(self.plan["position"])):
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
         self.plan_listbox.bind('<<ListboxSelect>>', self.blocs_filter_plan)
 
         self.source_listbox = Listbox(
@@ -218,13 +218,17 @@ class Biblio:
                     ['i. ', 'ii. ', 'iii. ', 'iv. ', 'v. ', 'vi. ', 'vii. ', 'viii. ', 'ix. ', 'x. '],
                     ['-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ']]
         ct = [0, 0, 0, 0, 0, 0]
-        built_plan = []
-        for k in range(len(self.plan["position"])):
+        built_plan = ['' for k in range(len(self.plan["position"]))]
+        for p in range(len(self.plan["position"])):
+            k = self.plan["position"].index(p)
             for l in self.tag_list:
                 if self.plan["ID"][k] == l[1]:
                     order = self.plan["order"][k]
-                    built_plan += ['___' * order + title[order][ct[order]] + l[0]]
+                    built_plan[self.plan["position"][k]] = '___' * order + title[order][ct[order]] + l[0]
                     ct[order] += 1
+                    if p < len(self.plan["position"])-1:
+                        if order > self.plan["order"][self.plan["position"].index(p+1)]:
+                            ct[order] = 0
                     break
         return built_plan
 
@@ -236,9 +240,9 @@ class Biblio:
                     self.plan["order"][k] -= 1
 
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
@@ -251,9 +255,9 @@ class Biblio:
                     self.plan["order"][k] += 1
 
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
@@ -270,9 +274,9 @@ class Biblio:
         self.plan["position"][current] = tp
 
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
@@ -289,9 +293,9 @@ class Biblio:
         self.plan["position"][current] = tp
 
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
@@ -334,9 +338,9 @@ class Biblio:
             self.plan = self.import_dict(self.p, 'plan')
 
             self.plan_listbox.delete(0, END)
-            for k in range(len(self.plan["position"])):
-                new = self.build_plan()
-                self.plan_listbox.insert(self.plan["position"][k], new[k])
+            new = self.build_plan()
+            for k in range(len(new)):
+                self.plan_listbox.insert(k, new[k])
 
     def delete_plan(self):
         pos = self.plan_listbox.curselection()[0]
@@ -368,9 +372,9 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
 
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
     def edit_plan(self):
         pos = self.plan_listbox.curselection()[0]
@@ -393,9 +397,9 @@ class Biblio:
 
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan_listbox.delete(0, END)
-        for k in range(len(self.plan["position"])):
-            new = self.build_plan()
-            self.plan_listbox.insert(self.plan["position"][k], new[k])
+        new = self.build_plan()
+        for k in range(len(new)):
+            self.plan_listbox.insert(k, new[k])
 
     def edit_notes_from_plan(self):
         # Get corresponding notes
