@@ -328,6 +328,9 @@ class Biblio:
 
     def add_plan(self):
         # to be called on edit button press
+        pos = self.plan_listbox.curselection()
+
+        # Get plan tag name
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='New category? :')
         self.tag_next_but.wait_variable(self.var)
@@ -338,15 +341,20 @@ class Biblio:
             else:
                 new_ID = max(self.plan["ID"]) + 1
             self.plan["ID"] += [new_ID]
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='position :')
-            self.tag_next_but.wait_variable(self.var)
-            position = int(self.shell_text.get("1.0", "end-1c"))
+            # if no position has been selected
+            if len(pos) == 0:
+                self.shell_text.delete("1.0", "end-1c")
+                self.shell_label.configure(text='position :')
+                self.tag_next_but.wait_variable(self.var)
+                position = int(self.shell_text.get("1.0", "end-1c"))
+            else:
+                position = pos[0] + 1
             if position in self.plan["position"]:
                 for k in range(len(self.plan["position"])):
                     if position <= self.plan["position"][k]:
                         self.plan["position"][k] += 1
             self.plan["position"] += [position]
+            # Get tag order
             self.shell_text.delete("1.0", "end-1c")
             self.shell_label.configure(text='order :')
             self.tag_next_but.wait_variable(self.var)
