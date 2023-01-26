@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from bs4 import BeautifulSoup
 from tkhtmlview import HTMLLabel
-import re
+import nltk
 
 # Functions
 
@@ -142,11 +142,19 @@ class Biblio:
 
         self.search_but = Button(
             window,
-            text='Search all',
+            text='Search',
             height=1,
-            width=10,
+            width=7,
             command=self.blocs_filter_search)
-        self.search_but.place(x=810, y=500)
+        self.search_but.place(x=800, y=500)
+
+        self.topics_but = Button(
+            window,
+            text='Topics',
+            height=1,
+            width=7,
+            command=self.blocs_main_subjects)
+        self.topics_but.place(x=860, y=500)
 
         self.save_note_but = Button(
             window,
@@ -708,9 +716,35 @@ class Biblio:
     def blocs_filter_search(self):
         self.blocs_listbox.delete(0, END)
         request = self.search_text.get("1.0", "end-1c")
+        lemma = nltk.stem.WordNetLemmatizer().lemmatize(request)
         for k in self.blocs["text"]:
-            if request in k:
+            if lemma in k:
                 self.blocs_listbox.insert(END, k)
+
+    def blocs_main_subjects(self):
+
+        whole_words = ''
+        for k in self.blocs["text"]:
+            whole_words += k
+        words = nltk.tokenize.word_tokenize(whole_words)
+        stop_words = set(nltk.corpus.stopwords.words("english"))
+        stop_words.update(',', '.', '(', ')', '[', ']', 'Figure')
+        filtered_words = []
+        # Filter words and set to their lemma
+        lemmatizer = nltk.stem.WordNetLemmatizer()
+        for word in words:
+            if word.casefold() not in stop_words:
+                filtered_words.append(lemmatizer.lemmatize(word))
+
+        self.shell_text.delete('1.0', "end-1c")
+        for k in nltk.FreqDist(filtered_words).most_common(10):
+            self.shell_text.insert(END, str(k)+"\n")
+
+        # Study bi-collocation information
+        bigram_measures = nltk.collocations.BigramAssocMeasures()
+        finder = nltk.collocations.BigramCollocationFinder.from_words(filtered_words)
+        for k in finder.nbest(bigram_measures.likelihood_ratio, 10):
+            self.shell_text.insert(END, str(k) + "\n")
 
     def read_blocs(self, event):
         if self.tagging == 0:
