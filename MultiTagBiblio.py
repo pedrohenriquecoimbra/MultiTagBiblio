@@ -5,7 +5,8 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'pyperclip', 'requests', 'beautifulsoup4', 'tkhtmlview', 'nltk']
+dependencies = ['tk', 'pyperclip', 'requests', 'beautifulsoup4', 'tkhtmlview', 'nltk', 'sentence_transformers',
+                'matplotlib', 'scipy', 'sklearn']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -188,7 +189,7 @@ class Biblio:
             text='Export all',
             height=1,
             width=10)
-        self.export_but.place(x=1400, y=800)
+        self.export_but.place(x=1400, y=750)
 
         self.plan_listbox = Listbox(
             window,
@@ -873,7 +874,7 @@ def unique(X):
 
 win = Tk()
 win.title('Multi Tag Biblio')
-win.attributes("-fullscreen", True)
+win.state('zoomed')
 init_dict()
 mt = Biblio(win)
 win.mainloop()
