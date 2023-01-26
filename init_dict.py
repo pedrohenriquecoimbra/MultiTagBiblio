@@ -1,5 +1,5 @@
 import pickle
-import os
+
 
 def restart_dict():
     p = "C:\\Users\\tigerault\\PycharmProjects\\Multitag\\Storage\\"

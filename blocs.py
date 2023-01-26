@@ -5,6 +5,10 @@ import pickle
 import os
 import pyperclip
 import numpy as np
+import requests
+from bs4 import BeautifulSoup
+from tkhtmlview import HTMLLabel
+import re
 
 # Functions
 
@@ -36,9 +40,25 @@ class Biblio:
             window,
             text='Input',
             height=1,
-            width=10,
+            width=7,
             command=self.add_to_blocs)
-        self.input_but.place(x=420, y=500)
+        self.input_but.place(x=400, y=460)
+
+        self.info_but = Button(
+            window,
+            text='Info',
+            height=1,
+            width=7,
+            command=self.send_doi)
+        self.info_but.place(x=460, y=460)
+
+        self.del_art_but = Button(
+            window,
+            text='Remove',
+            height=1,
+            width=7,
+            command=self.delete_article)
+        self.del_art_but.place(x=430, y=510)
 
         self.tag_but = Button(
             window,
@@ -156,12 +176,12 @@ class Biblio:
 
         self.source_listbox = Listbox(
             window,
-            height=30,
+            height=27,
             width=20,
             selectmode=EXTENDED)
         self.source_listbox.place(x=400, y=10)
-        for k in np.unique(self.blocs["source"]):
-            self.source_listbox.insert(END, k)
+        for k in unique(self.blocs["source"]):
+            self.source_listbox.insert(END, k[0])
         self.source_listbox.bind('<<ListboxSelect>>', self.blocs_filter_sources)
 
         self.blocs_listbox = Listbox(
@@ -434,7 +454,11 @@ class Biblio:
         self.shell_label.configure(text='Extracts separator :')
         self.tag_next_but.wait_variable(self.var)
         sep = self.shell_text.get("1.0", "end-1c")
-        if sep in self.blocs["source"]:
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Is there a DOI ? :')
+        self.tag_next_but.wait_variable(self.var)
+        doi = self.shell_text.get("1.0", "end-1c")
+        if [sep, doi] in self.blocs["source"]:
             self.shell_text.delete("1.0", "end-1c")
             self.shell_label.configure(text='Already added!')
             return None
@@ -454,7 +478,7 @@ class Biblio:
             for k in range(article.count(sep)):
                 bloc_e = article.index(sep)
                 self.blocs['text'] += [article[bloc_s:bloc_e].replace('\n', '').replace('\t', '')]
-                self.blocs['source'] += [sep]
+                self.blocs['source'] += [[sep, doi]]
                 self.blocs['tag'] += [[]]
                 # shorten the string for the index function to find the next occurrence
                 article = article[bloc_e + len(sep):]
@@ -467,8 +491,27 @@ class Biblio:
             self.blocs = self.import_dict(self.p, 'blocs')
 
             self.source_listbox.delete(0, END)
-            for k in np.unique(self.blocs["source"]):
-                self.source_listbox.insert(END, k)
+            for k in unique(self.blocs["source"]):
+                self.source_listbox.insert(END, k[0])
+
+    def delete_article(self):
+        pos = self.source_listbox.curselection()[0]
+        article = self.source_listbox.get(pos)
+        deleted = 0
+        for j in range(len(self.blocs["source"])):
+            k = j - deleted
+            if self.blocs["source"][k][0] == article:
+                del self.blocs["text"][k]
+                del self.blocs["source"][k]
+                del self.blocs["tag"][k]
+                deleted += 1
+
+        self.save_dict(self.p, 'blocs', self.blocs)
+        self.blocs = self.import_dict(self.p, 'blocs')
+
+        self.source_listbox.delete(0, END)
+        for k in unique(self.blocs["source"]):
+            self.source_listbox.insert(END, k[0])
 
     def tag_blocs(self):
         self.tagging = 1
@@ -522,7 +565,7 @@ class Biblio:
         else:
             sep = self.source_listbox.get(source)
             for k in range(len(self.blocs["text"])):
-                if self.blocs["source"][k] == sep:
+                if self.blocs["source"][k][0] == sep:
                     selected += [self.blocs["text"][k]]
 
             deleted = 0
@@ -632,13 +675,13 @@ class Biblio:
                             if self.blocs["tag"][k][l][1] == self.plan["ID"][pos]:
                                 selected += [self.blocs["text"][k]]
                                 sources += [self.blocs["source"]]
-                sources = list(np.unique(sources))
+                sources = unique(sources)
                 self.blocs_listbox.delete(0, END)
                 for k in selected:
                     self.blocs_listbox.insert(END, k)
                 self.source_listbox.delete(0, END)
                 for k in sources:
-                    self.source_listbox.insert(END, k)
+                    self.source_listbox.insert(END, k[0])
                 # Get corresponding notes
                 #self.notes_text.delete('1.0', "end-1c")
                 #self.notes_text.insert("1.0", self.plan["note"][pos])
@@ -647,7 +690,7 @@ class Biblio:
         pos = self.source_listbox.curselection()[0]
         selected = []
         for k in range(len(self.blocs["text"])):
-            if self.blocs["source"][k] == self.source_listbox.get(pos):
+            if self.blocs["source"][k][0] == self.source_listbox.get(pos):
                 selected += [self.blocs["text"][k]]
 
         self.blocs_listbox.delete(0, END)
@@ -665,7 +708,7 @@ class Biblio:
         if self.tagging == 0:
             # Reset widgets
             self.shell_text.delete('1.0', "end-1c")
-            for k in [list(np.unique(self.blocs["source"])).index(l) for l in self.blocs["source"]]:
+            for k in [unique(self.blocs["source"]).index(l) for l in self.blocs["source"]]:
                 self.source_listbox.itemconfig(k, bg="white")
             for k in self.plan["position"]:
                 self.plan_listbox.itemconfig(k, bg='white')
@@ -678,12 +721,46 @@ class Biblio:
                 for j in range(len(self.blocs["text"])):
                     if self.blocs["text"][j] == self.blocs_listbox.get(i):
                         source = self.blocs["source"][j]
-                        self.source_listbox.itemconfig(list(np.unique(self.blocs["source"])).index(source), bg='green')
+                        self.source_listbox.itemconfig(unique(self.blocs["source"]).index(source), bg='green')
 
                         for k in self.blocs["tag"][j]:
                             for m in range(len(self.plan["ID"])):
                                 if k[1] == self.plan["ID"][m]:
                                     self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
+
+    def send_doi(self):
+        pos = self.source_listbox.curselection()[0]
+        for k in self.blocs["source"]:
+            if k[0] == self.source_listbox.get(pos):
+                doi = k[1]
+                break
+        ArticleInfo(doi=doi)
+
+
+class ArticleInfo:
+    def __init__(self, doi):
+        win2 = Tk()
+        win2.title('Article metadata')
+        win2.geometry("600x400")
+        my_label = HTMLLabel(win2, height=20, width=70, html=self.parse_doi(doi))
+        my_label.place(x = 10, y = 10)
+        win2.mainloop()
+
+    def parse_doi(self, doi):
+        if len(doi) == 0:
+            return 'No DOI provided'
+        else:
+            url = "https://scholar.google.com/scholar?q=" + doi
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0"}
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.content, "html.parser")
+            for data in soup(['img']):
+                # Remove tags
+                data.decompose()
+            print(soup.find('div', {'class': 'gs_ri'}))
+
+            return str(soup.find('div', {'class': 'gs_ri'}).prettify())
+
 
 
 def init_dict():
@@ -692,7 +769,7 @@ def init_dict():
     # Check whether the specified path exists or not
     if not os.path.exists(p):
         os.makedirs(p)
-        d = dict(text=['default'], source=['default'], tag=[[]])
+        d = dict(text=['default'], source=[['default', '']], tag=[[]])
         with open(p + "\\blocs.pkl", 'wb') as f:
             pickle.dump(d, f)
 
@@ -700,6 +777,13 @@ def init_dict():
         with open(p + "\\plan.pkl", 'wb') as f:
             pickle.dump(d, f)
 
+
+def unique(X):
+    only_one = []
+    for k in X:
+        if k not in only_one:
+            only_one += [k]
+    return only_one
 
 # Script
 
