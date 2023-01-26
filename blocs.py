@@ -23,6 +23,10 @@ import requests
 from bs4 import BeautifulSoup
 from tkhtmlview import HTMLLabel
 import nltk
+from sentence_transformers import SentenceTransformer, util
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.cluster import AgglomerativeClustering
 
 
 # Functions
@@ -697,22 +701,23 @@ class Biblio:
                 pos = self.plan["position"].index(i)
                 selected = []
                 sources = []
-                for k in range(len(self.blocs["text"])):
+                # Skip the firt 'default' source
+                for k in range(1, len(self.blocs["text"])):
                     for l in range(len(self.blocs["tag"][k])):
                         if len(self.blocs["tag"][k][l]) > 0:
                             if self.blocs["tag"][k][l][1] == self.plan["ID"][pos]:
                                 selected += [self.blocs["text"][k]]
-                                sources += [self.blocs["source"]]
+                                sources += [self.blocs["source"][k]]
                 sources = unique(sources)
+                print(sources)
                 self.blocs_listbox.delete(0, END)
                 for k in selected:
                     self.blocs_listbox.insert(END, k)
-                self.source_listbox.delete(0, END)
                 for k in sources:
-                    self.source_listbox.insert(END, k[0])
-                # Get corresponding notes
-                #self.notes_text.delete('1.0', "end-1c")
-                #self.notes_text.insert("1.0", self.plan["note"][pos])
+                    print(k)
+                    index = self.source_listbox.get(0, "end").index(k[0])
+                    print(index)
+                    self.source_listbox.itemconfig(index, bg='green')
 
     def blocs_filter_sources(self, event):
         pos = self.source_listbox.curselection()[0]
@@ -734,29 +739,54 @@ class Biblio:
                 self.blocs_listbox.insert(END, k)
 
     def blocs_main_subjects(self):
-
-        whole_words = ''
+        tensors = []
+        # load pre-trained model
+        model = SentenceTransformer('all-MiniLM-L6-v2')
         for k in self.blocs["text"]:
-            whole_words += k
-        words = nltk.tokenize.word_tokenize(whole_words)
-        stop_words = set(nltk.corpus.stopwords.words("english"))
-        stop_words.update(',', '.', '(', ')', '[', ']', 'Figure')
-        filtered_words = []
-        # Filter words and set to their lemma
-        lemmatizer = nltk.stem.WordNetLemmatizer()
-        for word in words:
-            if word.casefold() not in stop_words:
-                filtered_words.append(lemmatizer.lemmatize(word))
+            if k != 'default':
+                selected = model.encode(k)
+                compare = model.encode(self.blocs["text"])
+                cos_sim = util.cos_sim(selected, compare)
+                tensors += [cos_sim.tolist()[0]]
+
+        # Classifying vectorial products for each bloc
+        linkage_data = linkage(tensors, method='ward', metric='euclidean')
+        dendrogram(linkage_data)
 
         self.shell_text.delete('1.0', "end-1c")
-        for k in nltk.FreqDist(filtered_words).most_common(10):
-            self.shell_text.insert(END, str(k)+"\n")
+        self.shell_label.configure(text='Number of clusters? :')
+        plt.show()
+        self.tag_next_but.wait_variable(self.var)
+        nb_clusters = int(self.shell_text.get("1.0", "end-1c"))
 
-        # Study bi-collocation information
-        bigram_measures = nltk.collocations.BigramAssocMeasures()
-        finder = nltk.collocations.BigramCollocationFinder.from_words(filtered_words)
-        for k in finder.nbest(bigram_measures.likelihood_ratio, 10):
-            self.shell_text.insert(END, str(k) + "\n")
+        hierarchical_cluster = AgglomerativeClustering(n_clusters=nb_clusters, affinity='euclidean', linkage='ward')
+        labels = hierarchical_cluster.fit_predict(tensors)
+        groups = ['' for k in unique(labels)]
+
+        for k in range(len(self.blocs["text"])-1):
+            groups[labels[k]] += self.blocs["text"][k+1]
+
+        self.shell_text.delete('1.0', "end-1c")
+        for k in range(len(groups)):
+            # Frequent keywords and word combinations in blocs
+            words = nltk.tokenize.word_tokenize(groups[k])
+            stop_words = set(nltk.corpus.stopwords.words("english"))
+            stop_words.update(',', '.', '(', ')', '[', ']', 'Figure')
+            filtered_words = []
+            # Filter words and set to their lemma
+            lemmatizer = nltk.stem.WordNetLemmatizer()
+            for word in words:
+                if word.casefold() not in stop_words:
+                    filtered_words.append(lemmatizer.lemmatize(word))
+            self.shell_text.insert(END, "Group " + str(k) + " :\n")
+            for k in nltk.FreqDist(filtered_words).most_common(2):
+                self.shell_text.insert(END, str(k)+"\n")
+
+            # Study bi-collocation information
+            bigram_measures = nltk.collocations.BigramAssocMeasures()
+            finder = nltk.collocations.BigramCollocationFinder.from_words(filtered_words)
+            for k in finder.nbest(bigram_measures.likelihood_ratio, 2):
+                self.shell_text.insert(END, str(k) + "\n")
 
     def read_blocs(self, event):
         if self.tagging == 0:
