@@ -16,9 +16,9 @@ An experimental semantic classification of all information blocs is also propose
 
 - execute : *git clone https://github.com/MTreestanG/MultiTagBiblio*
 
-- double click *run_MultiTagBiblio.bat* for Windows users.
-
 ## Usage
+
+Double click *run_MultiTagBiblio.bat* for Windows users (or just execute *MultiTagBiblio.py* from terminal)
 
 Add your articles with the *Input* button. For each step, you can enter text strings in the "Shell" text widget at the right. To confirm entry, press *Next* button :
 - provide the separator string from your article extract.
@@ -29,6 +29,14 @@ Then build a plan(s) related to your research questions in the left pane :
 Click the *Add* button to add a plan category. You can select a position in your existing plan to position the new element easily. Other button commands are comprehensive and enable structure modifications.
 
 You can then tag whole article by selecting it and press *Tagging*, or just one block when modifying afterwards, with the same button. While tagging, follow the *Shell* pane title instructions and press *Next* once you have selected plan categories related to the current displayed sentence.
+
+Finally, when selecting a plan category, press *Take notes* button to start taking notes in the bottom text entry of the window. Don't forget to press *Save* before switching to another.
+
+## Visualization
+
+You can use the *Search* button field to search all sentences from all articles. Search term will be fetched its lemma to extend search results.
+
+(Experimental) You can use the *Topics* button to classify all sentences according to Hierarchical Ascending Classification (vectorized with *sentence_transformers* package). Witness the adapted number of categories from the plot and enter the corresponding value to get groups displayed and the most occuring topics in these groups.
 
 ## Update
 
