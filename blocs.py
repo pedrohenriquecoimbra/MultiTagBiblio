@@ -1,14 +1,29 @@
 # Imports
+import os
+import sys
+import subprocess
+cwd = os.getcwd()
+p = cwd + "\\Storage"
+# Check whether the specified path exists or not
+dependencies = ['tk', 'pyperclip', 'requests', 'beautifulsoup4', 'tkhtmlview', 'nltk']
+if not os.path.exists(p):
+    setup = input("First time use, install dependancies? (y/n) :")
+    if setup == 'y':
+        for k in dependencies:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', k])
+        import nltk
+        nltk.download('punkt')
+        nltk.download("stopwords")
+        nltk.download('wordnet')
 
 from tkinter import *
 import pickle
-import os
 import pyperclip
-import numpy as np
 import requests
 from bs4 import BeautifulSoup
 from tkhtmlview import HTMLLabel
 import nltk
+
 
 # Functions
 
@@ -351,10 +366,7 @@ class Biblio:
             self.plan["ID"] += [new_ID]
             # if no position has been selected
             if len(pos) == 0:
-                self.shell_text.delete("1.0", "end-1c")
-                self.shell_label.configure(text='position :')
-                self.tag_next_but.wait_variable(self.var)
-                position = int(self.shell_text.get("1.0", "end-1c"))
+                position = 0
             else:
                 position = pos[0] + 1
             if position in self.plan["position"]:
@@ -804,7 +816,6 @@ class ArticleInfo:
             return str(soup.find('div', {'class': 'gs_ri'}).prettify())
 
 
-
 def init_dict():
     cwd = os.getcwd()
     p = cwd + "\\Storage"
@@ -826,6 +837,7 @@ def unique(X):
         if k not in only_one:
             only_one += [k]
     return only_one
+
 
 # Script
 
