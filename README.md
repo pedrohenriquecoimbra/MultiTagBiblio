@@ -20,10 +20,7 @@ An experimental semantic classification of all information blocs is also propose
 
 Double click *run_MultiTagBiblio.bat* for Windows users (or just execute *MultiTagBiblio.py* from terminal)
 
-Add your articles with the *Input* button. For each step, you can enter text strings in the "Shell" text widget at the right. To confirm entry, press *Next* button :
-- provide the separator string from your article extract.
-- if available, provide related DOI to then access more information later with the *Info* button.
-- Copy your raw extract from pdf and when asked "Paste?" press *Next*. This will get copied content from your clipboard.
+This program is meant to use your Zotero local database as a starting point. On first use, point to your Zotero installation directory and mention the name of the parent collection in Zotero in which your papers are grouped. On launch, click the *Import Zotero* button to get your last annotations. Please note Zotero should be closed to perform this action.
 
 Then build a plan(s) related to your research questions in the left pane :
 Click the *Add* button to add a plan category. You can select a position in your existing plan to position the new element easily. Other button commands are comprehensive and enable structure modifications.
