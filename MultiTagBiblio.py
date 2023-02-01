@@ -5,8 +5,7 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'pyperclip', 'requests', 'beautifulsoup4', 'tkhtmlview', 'nltk', 'sentence_transformers',
-                'matplotlib', 'scipy', 'sklearn']
+dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -18,10 +17,10 @@ if not os.path.exists(p):
         nltk.download('wordnet')
 
 from tkinter import *
+from tkinter.filedialog import askdirectory
 import pickle
-import pyperclip
-import requests
-from bs4 import BeautifulSoup
+import sqlite3
+import json
 from tkhtmlview import HTMLLabel
 import nltk
 from sentence_transformers import SentenceTransformer, util
@@ -41,6 +40,7 @@ class Biblio:
         self.blocs = self.import_dict(self.p, 'blocs')
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan = self.import_dict(self.p, 'plan')
+        self.zotero = self.import_dict(self.p, 'Zotero_data')
         self.tagging = 0
         self.window = window
 
@@ -58,7 +58,7 @@ class Biblio:
 
         self.input_but = Button(
             window,
-            text='Input',
+            text='Import Zotero',
             height=1,
             width=7,
             command=self.add_to_blocs)
@@ -69,7 +69,7 @@ class Biblio:
             text='Info',
             height=1,
             width=7,
-            command=self.send_doi)
+            command=self.send_key)
         self.info_but.place(x=460, y=460)
 
         self.del_art_but = Button(
@@ -482,50 +482,20 @@ class Biblio:
     # Blocs management
 
     def add_to_blocs(self):
-        # to edit existing tags on a bloc, recall this function for just 1 bloc
-        self.shell_text.delete("1.0", "end-1c")
-        self.shell_label.configure(text='Extracts separator :')
-        self.tag_next_but.wait_variable(self.var)
-        sep = self.shell_text.get("1.0", "end-1c")
-        self.shell_text.delete("1.0", "end-1c")
-        self.shell_label.configure(text='Is there a DOI ? :')
-        self.tag_next_but.wait_variable(self.var)
-        doi = self.shell_text.get("1.0", "end-1c")
-        if [sep, doi] in self.blocs["source"]:
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Already added!')
-            return None
-        else:
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Paste?')
-            self.tag_next_but.wait_variable(self.var)
-            article = pyperclip.paste().replace('\r', '')
-
-            if sep not in article or len(sep) == 0:
-                self.shell_text.delete("1.0", "end-1c")
-                self.shell_label.configure(text='Veuillez réessayer, séparateur introuvable.')
-                return None
-
-            bloc_s = 0
-
-            for k in range(article.count(sep)):
-                bloc_e = article.index(sep)
-                self.blocs['text'] += [article[bloc_s:bloc_e].replace('\n', '').replace('\t', '')]
-                self.blocs['source'] += [[sep, doi]]
+        sources, highlights, notes = self.zotero_import()
+        for k in range(len(highlights)):
+            if highlights[k] not in self.blocs['text']:
+                self.blocs['text'] += [highlights[k]]
+                self.blocs['source'] += [sources[k]]
+                self.blocs['note'] += [notes[k]]
                 self.blocs['tag'] += [[]]
-                # shorten the string for the index function to find the next occurrence
-                article = article[bloc_e + len(sep):]
 
-            # Reset shell
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Extracts separator :')
+        self.save_dict(self.p, 'blocs', self.blocs)
+        self.blocs = self.import_dict(self.p, 'blocs')
 
-            self.save_dict(self.p, 'blocs', self.blocs)
-            self.blocs = self.import_dict(self.p, 'blocs')
-
-            self.source_listbox.delete(0, END)
-            for k in unique(self.blocs["source"]):
-                self.source_listbox.insert(END, k[0])
+        self.source_listbox.delete(0, END)
+        for k in unique(self.blocs["source"]):
+            self.source_listbox.insert(END, k[0])
 
     def delete_article(self):
         pos = self.source_listbox.curselection()[0]
@@ -800,51 +770,122 @@ class Biblio:
 
             for i in self.blocs_listbox.curselection():
                 # Display in shell
-                self.shell_text.insert(END, self.blocs_listbox.get(i) + '\n----\n')
+                self.shell_text.insert(END, self.blocs_listbox.get(i))
 
                 # Show corresponding tags and sources
                 for j in range(len(self.blocs["text"])):
                     if self.blocs["text"][j] == self.blocs_listbox.get(i):
                         source = self.blocs["source"][j]
                         self.source_listbox.itemconfig(unique(self.blocs["source"]).index(source), bg='green')
+                        note = self.blocs["note"][j]
+                        if len(note) > 0:
+                            self.shell_text.insert(END, '\n\nNOTE : ' + note)
 
                         for k in self.blocs["tag"][j]:
                             for m in range(len(self.plan["ID"])):
                                 if k[1] == self.plan["ID"][m]:
                                     self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
 
-    def send_doi(self):
+                self.shell_text.insert(END, '\n----\n')
+
+    def send_key(self):
         pos = self.source_listbox.curselection()[0]
         for k in self.blocs["source"]:
             if k[0] == self.source_listbox.get(pos):
-                doi = k[1]
+                key = k[1]
                 break
-        ArticleInfo(doi=doi)
+        ArticleInfo(key=key, zotero=self.zotero)
+
+    # Exchanges with Zotero
+    def zotero_import(self):
+        # standard database connection
+        conn = sqlite3.connect(self.zotero['path'] + '/zotero.sqlite')
+        cur = conn.cursor()
+        # Then disconnect?
+        # access to database table "syncCache" for data retrieval
+        sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
+
+        for k in sCacheData:
+            document = json.loads(k[0])
+            if 'name' in document['data'].keys():
+                if self.zotero['target_collection'] == document['data']['name']:
+                    parent = document['data']['key']
+                    break
+
+        items = []
+        all_annotations = []
+        for k in sCacheData:
+            document = json.loads(k[0])
+            if 'collections' in document['data'].keys():
+                if parent in document['data']['collections'] and document['data']['itemType'] != 'attachment':
+                    items += [document]
+            elif 'annotationType' in document['data'].keys():
+                if document['data']['annotationType'] == 'highlight' or document['data']['annotationType'] == 'note':
+                    all_annotations += [document]
+
+        annotations = [[] for k in items]
+        for k in sCacheData:
+            link = json.loads(k[0])
+            for m in range(len(items)):
+                for n in range(len(all_annotations)):
+                    if 'parentItem' in link['data'].keys() and 'parentItem' in all_annotations[n]['data'].keys():
+                        if link['data']['parentItem'] == items[m]['data']['key'] and link['data']['key'] == \
+                                all_annotations[n]['data']['parentItem']:
+                            annotations[m] += [all_annotations[n]['data']]
+
+        sources, highlights, notes = [], [], []
+        for k in range(len(annotations)):
+            annotations[k] = sorted(annotations[k], key=lambda d: d['annotationSortIndex'])
+            if 'creatorSummary' in items[k]['meta'].keys():
+                parent_summary = items[k]['meta']['creatorSummary'] + ', ' + items[k]['meta']['parsedDate'][:4]
+            else:
+                parent_summary = '?, ' + items[k]['meta']['parsedDate'][:4]
+            parent_id = items[k]['key']
+            skip = 0
+            for m in range(len(annotations[k])):
+                j = m + skip
+                if j < len(annotations[k]):
+                    sources += [[parent_summary, parent_id]]
+                    if 'annotationText' in annotations[k][j].keys():
+                        highlights += [annotations[k][j]['annotationText']]
+                        notes += ['']
+                    elif 'annotationComment' in annotations[k][j].keys():
+                        if j == len(annotations[k]) - 1:
+                            highlights += ['Just a note']
+                            notes += [annotations[k][j]['annotationComment']]
+                        else:
+                            highlights += [annotations[k][j + 1]['annotationText']]
+                            notes += [annotations[k][j]['annotationComment']]
+                            skip += 1
+
+        return sources, highlights, notes
 
 
 class ArticleInfo:
-    def __init__(self, doi):
+    def __init__(self, key, zotero):
         win2 = Tk()
         win2.title('Article metadata')
         win2.geometry("600x400")
-        my_label = HTMLLabel(win2, height=20, width=70, html=self.parse_doi(doi))
+        my_label = HTMLLabel(win2, height=20, width=70, html=self.get_meta(key, zotero))
         my_label.place(x = 10, y = 10)
         win2.mainloop()
 
-    def parse_doi(self, doi):
-        if len(doi) == 0:
-            return 'No DOI provided'
-        else:
-            url = "https://scholar.google.com/scholar?q=" + doi
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0"}
-            response = requests.get(url, headers=headers)
-            soup = BeautifulSoup(response.content, "html.parser")
-            for data in soup(['img']):
-                # Remove tags
-                data.decompose()
-            print(soup.find('div', {'class': 'gs_ri'}))
+    def get_meta(self, key, zotero):
+        # standard database connection
+        conn = sqlite3.connect(zotero['path'] + '/zotero.sqlite')
+        cur = conn.cursor()
+        # Then disconnect?
+        # access to database table "syncCache" for data retrieval
+        sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
 
-            return str(soup.find('div', {'class': 'gs_ri'}).prettify())
+        for k in sCacheData:
+            document = json.loads(k[0])
+            if document['key'] == key:
+                parent = document
+        return (parent['data']['title'] + '<br>-<br>'
+                + ''.join([k['lastName'] + ', ' for k in parent['data']['creators']]) + '<br>-<br>'
+                + parent['data']['date'][:4] + '<br>-<br>'
+                + parent['data']['abstractNote'])
 
 
 def init_dict():
@@ -853,12 +894,19 @@ def init_dict():
     # Check whether the specified path exists or not
     if not os.path.exists(p):
         os.makedirs(p)
-        d = dict(text=['default'], source=[['default', '']], tag=[[]])
+        d = dict(text=['default'], source=[['default', '']], note=['default'], tag=[[]])
         with open(p + "\\blocs.pkl", 'wb') as f:
             pickle.dump(d, f)
 
         d = dict(position=[], ID=[], order=[], note=[])
         with open(p + "\\plan.pkl", 'wb') as f:
+            pickle.dump(d, f)
+
+        print('No Zotero folder found')
+        path = askdirectory(title='Select Zotero folder location')
+        target_collection = input("Enter the parent Zotero collection you are working with : ")
+        d = dict(path=path, target_collection=target_collection)
+        with open(p + "\\Zotero_data.pkl", 'wb') as f:
             pickle.dump(d, f)
 
 
@@ -872,9 +920,9 @@ def unique(X):
 
 # Script
 
+init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
 win.state('zoomed')
-init_dict()
 mt = Biblio(win)
 win.mainloop()
