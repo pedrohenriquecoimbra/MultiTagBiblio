@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="64d7e7ff-86fd-45b3-a10e-c5c7a4961f21" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MultiTagBiblio.py" beforeDir="false" afterPath="$PROJECT_DIR$/MultiTagBiblio.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

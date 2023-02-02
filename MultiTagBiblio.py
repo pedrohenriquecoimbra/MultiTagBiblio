@@ -41,7 +41,6 @@ class Biblio:
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan = self.import_dict(self.p, 'plan')
         self.zotero = self.import_dict(self.p, 'Zotero_data')
-        print(self.zotero)
         self.tagging = 0
         self.window = window
 
@@ -483,6 +482,7 @@ class Biblio:
     # Blocs management
 
     def add_to_blocs(self):
+        print(self.zotero)
         sources, highlights, notes = self.zotero_import()
         for k in range(len(highlights)):
             if highlights[k] not in self.blocs['text']:
