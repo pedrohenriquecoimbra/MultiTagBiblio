@@ -840,10 +840,14 @@ class Biblio:
         sources, highlights, notes = [], [], []
         for k in range(len(annotations)):
             annotations[k] = sorted(annotations[k], key=lambda d: d['annotationSortIndex'])
-            if 'creatorSummary' in items[k]['meta'].keys():
+            if 'creatorSummary' in items[k]['meta'].keys() and 'parsedDate' in items[k]['meta'].keys():
                 parent_summary = items[k]['meta']['creatorSummary'] + ', ' + items[k]['meta']['parsedDate'][:4]
-            else:
+            elif 'parsedDate' in items[k]['meta'].keys():
                 parent_summary = '?, ' + items[k]['meta']['parsedDate'][:4]
+            elif'creatorSummary' in items[k]['meta'].keys():
+                parent_summary = items[k]['meta']['creatorSummary'] + ', ?'
+            else:
+                parent_summary = 'Unknown'
             parent_id = items[k]['key']
             skip = 0
             for m in range(len(annotations[k])):
