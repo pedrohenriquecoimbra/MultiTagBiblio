@@ -2,7 +2,7 @@
 
 This program is thought as a tool to analyse a set of scientific papers under different scopes.
 
-After text extraction from your pdf reader with comprehensive separators between elements (*Author* et al *year*), you end up with information blocs (referenced sentences). This program enables manual multitagging according to a user-built plan. Notes can be inserted in each plan category to summarize tagged information blocs.
+After text extraction from your pdf reader with comprehensive separators between elements (*Author* et al *year*), you end up with information blocs (referenced sentences) and associated notes taken during reading. This extraction is automatic if you provide this program your Zotero installation directory and the targetted collection. This program enables manual multitagging according to a user-built plan. Notes can be inserted in each plan category to summarize tagged information blocs.
 
 An experimental semantic classification of all information blocs is also proposed for new topics classification to emerge from a given bibliography.
 
