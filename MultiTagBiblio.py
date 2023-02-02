@@ -41,6 +41,7 @@ class Biblio:
         self.tag_list = self.build_tag_list(self.blocs)
         self.plan = self.import_dict(self.p, 'plan')
         self.zotero = self.import_dict(self.p, 'Zotero_data')
+        print(self.zotero)
         self.tagging = 0
         self.window = window
 
@@ -58,11 +59,11 @@ class Biblio:
 
         self.input_but = Button(
             window,
-            text='Import Zotero',
+            text='Import Zot',
             height=1,
-            width=7,
+            width=10,
             command=self.add_to_blocs)
-        self.input_but.place(x=400, y=460)
+        self.input_but.place(x=380, y=460)
 
         self.info_but = Button(
             window,
@@ -804,6 +805,9 @@ class Biblio:
         # Then disconnect?
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
+
+        print(sCacheData)
+        print(os.path.exists(self.zotero['path'] + '/zotero.sqlite'))
 
         for k in sCacheData:
             document = json.loads(k[0])
