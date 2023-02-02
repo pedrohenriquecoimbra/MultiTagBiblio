@@ -806,9 +806,6 @@ class Biblio:
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
 
-        print(sCacheData)
-        print(os.path.exists(self.zotero['path'] + '/zotero.sqlite'))
-
         for k in sCacheData:
             document = json.loads(k[0])
             if 'name' in document['data'].keys():
