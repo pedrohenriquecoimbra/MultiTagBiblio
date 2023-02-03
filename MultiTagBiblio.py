@@ -803,8 +803,8 @@ class Biblio:
         # Then disconnect?
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
-        print(self.zotero['path'] + '/zotero.sqlite')
-        print(os.path.exists(self.zotero['path'] + '/zotero.sqlite'))
+        print(conn)
+        print(cur)
         print(sCacheData)
 
         for k in sCacheData:
