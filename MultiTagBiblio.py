@@ -681,14 +681,12 @@ class Biblio:
                                 selected += [self.blocs["text"][k]]
                                 sources += [self.blocs["source"][k]]
                 sources = unique(sources)
-                print(sources)
+
                 self.blocs_listbox.delete(0, END)
                 for k in selected:
                     self.blocs_listbox.insert(END, k)
                 for k in sources:
-                    print(k)
                     index = self.source_listbox.get(0, "end").index(k[0])
-                    print(index)
                     self.source_listbox.itemconfig(index, bg='green')
 
     def blocs_filter_sources(self, event):
@@ -805,6 +803,7 @@ class Biblio:
         # Then disconnect?
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
+        print(sCacheData)
 
         for k in sCacheData:
             document = json.loads(k[0])
