@@ -804,8 +804,10 @@ class Biblio:
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
         print(conn)
-        print(cur)
-        print(sCacheData)
+        sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
+        #sql = """SELECT data FROM items"""
+        print(cur.execute(sql_query).fetchall())
+        #print(sCacheData)
 
         for k in sCacheData:
             document = json.loads(k[0])
