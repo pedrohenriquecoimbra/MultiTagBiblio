@@ -803,10 +803,13 @@ class Biblio:
         # Then disconnect?
         # access to database table "syncCache" for data retrieval
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
-        print(conn)
+        names = """SELECT sql FROM sqlite_master
+        WHERE tbl_name = 'collectionItems' AND type = 'table'"""
+        print(cur.execute(names).fetchall())
         sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
-        #sql = """SELECT data FROM items"""
         print(cur.execute(sql_query).fetchall())
+        sql = """SELECT * FROM collectionItems"""
+        print(cur.execute(sql).fetchall())
         #print(sCacheData)
 
         for k in sCacheData:
