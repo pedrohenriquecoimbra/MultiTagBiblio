@@ -805,30 +805,71 @@ class Biblio:
         sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
         names = """SELECT sql FROM sqlite_master
         WHERE tbl_name = 'collectionItems' AND type = 'table'"""
-        print(cur.execute(names).fetchall())
+        #print(cur.execute(names).fetchall())
         sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
         print(cur.execute(sql_query).fetchall())
-        sql = """SELECT * FROM collectionItems"""
-        print(cur.execute(sql).fetchall())
-        #print(sCacheData)
 
-        for k in sCacheData:
-            document = json.loads(k[0])
-            if 'name' in document['data'].keys():
-                if self.zotero['target_collection'] == document['data']['name']:
-                    parent = document['data']['key']
-                    break
 
-        items = []
-        all_annotations = []
-        for k in sCacheData:
-            document = json.loads(k[0])
-            if 'collections' in document['data'].keys():
-                if parent in document['data']['collections'] and document['data']['itemType'] != 'attachment':
-                    items += [document]
-            elif 'annotationType' in document['data'].keys():
-                if document['data']['annotationType'] == 'highlight' or document['data']['annotationType'] == 'note':
-                    all_annotations += [document]
+        sql = """SELECT collectionID FROM collections WHERE collectionName='Thèse';"""
+        cursor = cur.execute(sql)
+        parent = cursor.fetchall()[0][0]
+
+        sql = """SELECT itemID FROM collectionItems WHERE collectionID=""" + str(parent) + ";"
+        cursor = cur.execute(sql)
+        #print(list(map(lambda x: x[0], cursor.description)))
+        items = [k[0] for k in cursor.fetchall()]
+
+        sql = """SELECT parentItemID, type, text, comment, sortIndex FROM itemAnnotations WHERE type=1 OR type=2"""
+        cursor = cur.execute(sql)
+        #print(list(map(lambda x: x[0], cursor.description)))
+        all_annotations = cursor.fetchall()
+
+        items_annotations = [[] for k in items]
+        for k in all_annotations:
+            sql = """SELECT parentItemID FROM itemAttachments WHERE itemID=""" + str(k[0]) + ";"
+            cursor = cur.execute(sql)
+            result = cursor.fetchall()[0][0]
+            if result in items:
+                pos = items.index(result)
+                items_annotations[pos] += [k]
+        
+        source = [[] for k in items]
+        for k in range(len(items)):
+            sql = """SELECT creatorID FROM itemCreators WHERE itemID=""" + str(items[k]) + " AND orderIndex=0;"
+            cursor = cur.execute(sql)
+            creator_ID = cursor.fetchall()
+
+            sql = """SELECT valueID FROM itemData WHERE itemID=""" + str(items[k]) + " AND fieldID=6;"
+            cursor = cur.execute(sql)
+            date_ID = cursor.fetchall()
+
+            if len(creator_ID) > 0:
+                sql = """SELECT lastName FROM creators WHERE creatorID=""" + str(creator_ID[0][0]) + ";"
+                cursor = cur.execute(sql)
+                first_author = cursor.fetchall()[0][0]
+            else:
+                first_author = '?'
+
+            if len(date_ID) > 0 :
+                sql = """SELECT value FROM itemDataValues WHERE valueID=""" + str(date_ID[0][0]) + ";"
+                cursor = cur.execute(sql)
+                date = cursor.fetchall()[0][0][:4]
+
+            else:
+                date = '?'
+            
+            source[k] = [first_author + ' et al., ' + date, items[k]]
+
+        # Just adapt bellow from items, items annotations, source
+
+        
+
+
+
+
+
+
+
 
         annotations = [[] for k in items]
         for k in sCacheData:
