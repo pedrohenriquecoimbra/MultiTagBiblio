@@ -94,7 +94,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_up_plan)
-        self.up_but.place(x=70, y=493)
+        self.up_but.place(x=70, y=495)
 
         self.down_but = Button(
             window,
@@ -102,7 +102,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_down_plan)
-        self.down_but.place(x=70, y=520)
+        self.down_but.place(x=70, y=522)
 
         self.left_but = Button(
             window,
@@ -110,7 +110,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_left_plan)
-        self.left_but.place(x=40, y=505)
+        self.left_but.place(x=38, y=507)
 
         self.right_but = Button(
             window,
@@ -118,7 +118,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_right_plan)
-        self.right_but.place(x=102, y=505)
+        self.right_but.place(x=102, y=507)
 
         self.add_tag_but = Button(
             window,
@@ -237,7 +237,7 @@ class Biblio:
 
         self.notes_text = Text(
             window,
-            height=17,
+            height=14,
             width=150)
         self.notes_text.place(x=50, y=550)
 
@@ -482,6 +482,7 @@ class Biblio:
     # Blocs management
 
     def add_to_blocs(self):
+        # Add if not in MultiTagBiblio
         sources, highlights, notes = self.zotero_import()
         for k in range(len(highlights)):
             if highlights[k] == 'Just a note':
@@ -498,6 +499,31 @@ class Biblio:
                     self.blocs['text'] += ["COM : " + notes[k]]
                     self.blocs['source'] += [sources[k]]
                     self.blocs['tag'] += [[]]
+        
+        # Delete if not in zotero
+        deleted = 0
+        for j in range(len(self.blocs["text"])):
+            k = j - deleted
+            if self.blocs["text"][k] != None and self.blocs["text"][k] != 'default':
+                if "NOTE : " in self.blocs["text"][k]:
+                    if self.blocs["text"][k][7:] not in notes:
+                        del self.blocs["text"][k]
+                        del self.blocs["source"][k]
+                        del self.blocs["tag"][k]
+                        deleted += 1
+
+                elif "COM : " in self.blocs["text"][k]:
+                    if self.blocs["text"][k][6:] not in notes:
+                        del self.blocs["text"][k]
+                        del self.blocs["source"][k]
+                        del self.blocs["tag"][k]
+                        deleted += 1
+                else:
+                    if self.blocs["text"][k] not in highlights:
+                        del self.blocs["text"][k]
+                        del self.blocs["source"][k]
+                        del self.blocs["tag"][k]
+                        deleted += 1
 
         self.save_dict(self.p, 'blocs', self.blocs)
         self.blocs = self.import_dict(self.p, 'blocs')
@@ -873,13 +899,11 @@ class Biblio:
                         highlights += [items_annotations[k][j][2]]
                         notes += ['']
                     elif items_annotations[k][j][2] == None and items_annotations[k][j][3] != None:
-                        if j == len(items_annotations[k]) - 1:
-                            highlights += ['Just a note']
-                            notes += [items_annotations[k][j][3]]
-                        else:
-                            highlights += [items_annotations[k][j+1][2]]
-                            notes += [items_annotations[k][j][3]]
-                            skip += 1
+                        highlights += ['Just a note']
+                        notes += [items_annotations[k][j][3]]
+                    else:
+                        highlights += [items_annotations[k][j][2]]
+                        notes += [items_annotations[k][j][3]]
 
         return sources, highlights, notes
 
@@ -945,8 +969,6 @@ class ArticleInfo:
         else:
             abstract = ""
 
-        print(title, abstract)
-
         return (title + '<br>-<br>'
                 + authors + '<br>-<br>'
                 + date[:4] + '<br>-<br>'
@@ -989,5 +1011,6 @@ init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
 win.state('zoomed')
+win.configure(bg='#8FBC8F')
 mt = Biblio(win)
 win.mainloop()
