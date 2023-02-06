@@ -811,7 +811,7 @@ class Biblio:
         #print(cur.execute(sql_query).fetchall())
 
 
-        sql = """SELECT collectionID FROM collections WHERE collectionName='Thèse';"""
+        sql = """SELECT collectionID FROM collections WHERE collectionName='""" + self.zotero["target_collection"] + "';"
         cursor = cur.execute(sql)
         parent = cursor.fetchall()[0][0]
 
