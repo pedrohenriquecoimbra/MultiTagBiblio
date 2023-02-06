@@ -897,18 +897,60 @@ class ArticleInfo:
         # standard database connection
         conn = sqlite3.connect(zotero['path'] + '/zotero.sqlite')
         cur = conn.cursor()
-        # Then disconnect?
-        # access to database table "syncCache" for data retrieval
-        sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
 
-        for k in sCacheData:
-            document = json.loads(k[0])
-            if document['key'] == key:
-                parent = document
-        return (parent['data']['title'] + '<br>-<br>'
-                + ''.join([k['lastName'] + ', ' for k in parent['data']['creators']]) + '<br>-<br>'
-                + parent['data']['date'][:4] + '<br>-<br>'
-                + parent['data']['abstractNote'])
+        sql = """SELECT valueID FROM itemData WHERE itemID=""" + str(key) + " AND fieldID=1;"
+        cursor = cur.execute(sql)
+        title_ID = cursor.fetchall()
+
+        if len(title_ID) > 0 :
+            sql = """SELECT value FROM itemDataValues WHERE valueID=""" + str(title_ID[0][0]) + ";"
+            cursor = cur.execute(sql)
+            title = cursor.fetchall()[0][0]
+        else:
+            title = ""
+
+        sql = """SELECT valueID FROM itemData WHERE itemID=""" + str(key) + " AND fieldID=6;"
+        cursor = cur.execute(sql)
+        date_ID = cursor.fetchall()
+
+        if len(date_ID) > 0 :
+            sql = """SELECT value FROM itemDataValues WHERE valueID=""" + str(date_ID[0][0]) + ";"
+            cursor = cur.execute(sql)
+            date = cursor.fetchall()[0][0]
+        else:
+            date = ""
+
+        sql = """SELECT creatorID, orderIndex FROM itemCreators WHERE itemID=""" + str(key) + ";"
+        cursor = cur.execute(sql)
+        creator_ID = sorted(cursor.fetchall(), key=lambda d: d[1])
+
+        authors = ""
+        for k in creator_ID:
+            sql = """SELECT lastName FROM creators WHERE creatorID=""" + str(k[0]) + ";"
+            cursor = cur.execute(sql)
+            authors += cursor.fetchall()[0][0] + " "
+            sql = """SELECT firstName FROM creators WHERE creatorID=""" + str(k[0]) + ";"
+            cursor = cur.execute(sql)
+            authors += cursor.fetchall()[0][0] + ", "
+
+
+        sql = """SELECT valueID FROM itemData WHERE itemID=""" + str(key) + " AND fieldID=2;"
+        cursor = cur.execute(sql)
+        abstract_ID = cursor.fetchall()
+
+        if len(abstract_ID) > 0 :
+            sql = """SELECT value FROM itemDataValues WHERE valueID=""" + str(abstract_ID[0][0]) + ";"
+            cursor = cur.execute(sql)
+            abstract = cursor.fetchall()[0][0]
+        else:
+            abstract = ""
+
+        print(title, abstract)
+
+        return (title + '<br>-<br>'
+                + authors + '<br>-<br>'
+                + date[:4] + '<br>-<br>'
+                + abstract)
 
 
 def init_dict():
