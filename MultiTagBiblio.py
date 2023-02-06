@@ -482,14 +482,22 @@ class Biblio:
     # Blocs management
 
     def add_to_blocs(self):
-        print(self.zotero)
         sources, highlights, notes = self.zotero_import()
         for k in range(len(highlights)):
-            if highlights[k] not in self.blocs['text']:
+            if highlights[k] == 'Just a note':
+                if "NOTE : " + notes[k] not in self.blocs['text']:
+                    self.blocs['text'] += ["NOTE : " + notes[k]]
+                    self.blocs['source'] += [sources[k]]
+                    self.blocs['tag'] += [[]]
+
+            elif highlights[k] not in self.blocs['text']:
                 self.blocs['text'] += [highlights[k]]
                 self.blocs['source'] += [sources[k]]
-                self.blocs['note'] += [notes[k]]
                 self.blocs['tag'] += [[]]
+                if len(notes[k]) > 0:
+                    self.blocs['text'] += ["COM : " + notes[k]]
+                    self.blocs['source'] += [sources[k]]
+                    self.blocs['tag'] += [[]]
 
         self.save_dict(self.p, 'blocs', self.blocs)
         self.blocs = self.import_dict(self.p, 'blocs')
@@ -776,9 +784,6 @@ class Biblio:
                     if self.blocs["text"][j] == self.blocs_listbox.get(i):
                         source = self.blocs["source"][j]
                         self.source_listbox.itemconfig(unique(self.blocs["source"]).index(source), bg='green')
-                        note = self.blocs["note"][j]
-                        if len(note) > 0:
-                            self.shell_text.insert(END, '\n\nNOTE : ' + note)
 
                         for k in self.blocs["tag"][j]:
                             for m in range(len(self.plan["ID"])):
@@ -800,14 +805,10 @@ class Biblio:
         # standard database connection
         conn = sqlite3.connect(self.zotero['path'] + '/zotero.sqlite')
         cur = conn.cursor()
-        # Then disconnect?
-        # access to database table "syncCache" for data retrieval
-        sCacheData = cur.execute("SELECT data FROM syncCache").fetchall()
-        names = """SELECT sql FROM sqlite_master
-        WHERE tbl_name = 'collectionItems' AND type = 'table'"""
-        #print(cur.execute(names).fetchall())
-        sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
-        print(cur.execute(sql_query).fetchall())
+        
+        # IF YOU WANT TO EXPLORE ZOTERO DATABASE TABLES NAMES
+        #sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
+        #print(cur.execute(sql_query).fetchall())
 
 
         sql = """SELECT collectionID FROM collections WHERE collectionName='Thèse';"""
@@ -816,12 +817,10 @@ class Biblio:
 
         sql = """SELECT itemID FROM collectionItems WHERE collectionID=""" + str(parent) + ";"
         cursor = cur.execute(sql)
-        #print(list(map(lambda x: x[0], cursor.description)))
         items = [k[0] for k in cursor.fetchall()]
 
         sql = """SELECT parentItemID, type, text, comment, sortIndex FROM itemAnnotations WHERE type=1 OR type=2"""
         cursor = cur.execute(sql)
-        #print(list(map(lambda x: x[0], cursor.description)))
         all_annotations = cursor.fetchall()
 
         items_annotations = [[] for k in items]
@@ -862,52 +861,24 @@ class Biblio:
 
         # Just adapt bellow from items, items annotations, source
 
-        
-
-
-
-
-
-
-
-
-        annotations = [[] for k in items]
-        for k in sCacheData:
-            link = json.loads(k[0])
-            for m in range(len(items)):
-                for n in range(len(all_annotations)):
-                    if 'parentItem' in link['data'].keys() and 'parentItem' in all_annotations[n]['data'].keys():
-                        if link['data']['parentItem'] == items[m]['data']['key'] and link['data']['key'] == \
-                                all_annotations[n]['data']['parentItem']:
-                            annotations[m] += [all_annotations[n]['data']]
-
         sources, highlights, notes = [], [], []
-        for k in range(len(annotations)):
-            annotations[k] = sorted(annotations[k], key=lambda d: d['annotationSortIndex'])
-            if 'creatorSummary' in items[k]['meta'].keys() and 'parsedDate' in items[k]['meta'].keys():
-                parent_summary = items[k]['meta']['creatorSummary'] + ', ' + items[k]['meta']['parsedDate'][:4]
-            elif 'parsedDate' in items[k]['meta'].keys():
-                parent_summary = '?, ' + items[k]['meta']['parsedDate'][:4]
-            elif'creatorSummary' in items[k]['meta'].keys():
-                parent_summary = items[k]['meta']['creatorSummary'] + ', ?'
-            else:
-                parent_summary = 'Unknown'
-            parent_id = items[k]['key']
+        for k in range(len(items_annotations)):
+            items_annotations[k] = sorted(list(items_annotations[k]), key=lambda d: d[4])
             skip = 0
-            for m in range(len(annotations[k])):
+            for m in range(len(items_annotations[k])):
                 j = m + skip
-                if j < len(annotations[k]):
-                    sources += [[parent_summary, parent_id]]
-                    if 'annotationText' in annotations[k][j].keys():
-                        highlights += [annotations[k][j]['annotationText']]
+                if j < len(items_annotations[k]):
+                    sources += [source[k]]
+                    if items_annotations[k][j][2] != None and items_annotations[k][j][3] == None:
+                        highlights += [items_annotations[k][j][2]]
                         notes += ['']
-                    elif 'annotationComment' in annotations[k][j].keys():
-                        if j == len(annotations[k]) - 1:
+                    elif items_annotations[k][j][2] == None and items_annotations[k][j][3] != None:
+                        if j == len(items_annotations[k]) - 1:
                             highlights += ['Just a note']
-                            notes += [annotations[k][j]['annotationComment']]
+                            notes += [items_annotations[k][j][3]]
                         else:
-                            highlights += [annotations[k][j + 1]['annotationText']]
-                            notes += [annotations[k][j]['annotationComment']]
+                            highlights += [items_annotations[k][j+1][2]]
+                            notes += [items_annotations[k][j][3]]
                             skip += 1
 
         return sources, highlights, notes
@@ -946,7 +917,7 @@ def init_dict():
     # Check whether the specified path exists or not
     if not os.path.exists(p):
         os.makedirs(p)
-        d = dict(text=['default'], source=[['default', '']], note=['default'], tag=[[]])
+        d = dict(text=['default'], source=[['default', '']], tag=[[]])
         with open(p + "\\blocs.pkl", 'wb') as f:
             pickle.dump(d, f)
 
