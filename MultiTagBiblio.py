@@ -5,7 +5,7 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn']
+dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -27,6 +27,7 @@ from sentence_transformers import SentenceTransformer, util
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering
+import docx
 
 
 # Functions
@@ -188,7 +189,8 @@ class Biblio:
             window,
             text='Export all',
             height=1,
-            width=10)
+            width=10,
+            command=self.export_all)
         self.export_but.place(x=1400, y=750)
 
         self.plan_listbox = Listbox(
@@ -827,6 +829,7 @@ class Biblio:
         ArticleInfo(key=key, zotero=self.zotero)
 
     # Exchanges with Zotero
+
     def zotero_import(self):
         # standard database connection
         conn = sqlite3.connect(self.zotero['path'] + '/zotero.sqlite')
@@ -907,6 +910,22 @@ class Biblio:
 
         return sources, highlights, notes
 
+    # Exchanges with word
+
+    def export_all(self):
+        doc = docx.Document()
+
+        headers = [[] for k in self.tag_list]
+        for k in range(len(self.tag_list)):
+            for m in range(len(self.plan["ID"])):
+                if self.tag_list[k][1] == self.plan["ID"][m]:
+                    headers[self.plan["position"][m]] = [self.tag_list[k][0], self.plan["order"][m], self.plan["note"][m]]
+        
+        for k in headers:
+            doc.add_heading(k[0], level=k[1]+1)
+            doc.add_paragraph(k[2])
+
+        doc.save("docx\\biblio_analysis.docx")
 
 class ArticleInfo:
     def __init__(self, key, zotero):
@@ -995,6 +1014,8 @@ def init_dict():
         d = dict(path=path, target_collection=target_collection)
         with open(p + "\\Zotero_data.pkl", 'wb') as f:
             pickle.dump(d, f)
+    if not os.path.exists(cwd + "\\docx"):
+        os.makedirs(cwd + "\\docx")
 
 
 def unique(X):
@@ -1011,6 +1032,6 @@ init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
 win.state('zoomed')
-win.configure(bg='#8FBC8F')
+win.configure(bg='#698B69')
 mt = Biblio(win)
 win.mainloop()
