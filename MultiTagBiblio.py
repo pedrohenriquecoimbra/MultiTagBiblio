@@ -5,7 +5,7 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx', 'datetime', 'shutil']
+dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx', 'datetime', 'shutil', 'pywin32']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -29,6 +29,7 @@ from sklearn.cluster import AgglomerativeClustering
 import docx
 from datetime import datetime
 import shutil
+import win32com.client
 
 
 # Functions
@@ -1086,6 +1087,27 @@ def init_dict():
         os.makedirs(cwd + "\\docx")
     if not os.path.exists(cwd + "\\Backup"):
         os.makedirs(cwd + "\\Backup")
+    
+    # Create windows system shortcuts
+    startup = "C:\\Users\\" + os.getlogin() + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"
+    taskbar = "C:\\Users\\" + os.getlogin() + "\\AppData\\Roaming\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar"
+    target = cwd + "\\MultiTagBiblio.bat"
+    if not os.path.exists(startup + "\\MultiTagBiblio.lnk"):
+        print("Creating quick access shortcuts")
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortCut(startup + "\\MultiTagBiblio.lnk")
+        shortcut.Targetpath = 'cmd.exe'
+        shortcut.Arguments = '/C "' + target + '"'
+        shortcut.WorkingDirectory = cwd
+        shortcut.WindowStyle = 1
+        shortcut.save()
+
+        shortcut = shell.CreateShortCut(taskbar + "\\MultiTagBiblio.lnk")
+        shortcut.Targetpath = 'cmd.exe'
+        shortcut.Arguments = '/C "' + target + '"'
+        shortcut.WorkingDirectory = cwd
+        shortcut.WindowStyle = 1
+        shortcut.save()
 
 
 def unique(X):
