@@ -20,7 +20,6 @@ from tkinter import *
 from tkinter.filedialog import askdirectory
 import pickle
 import sqlite3
-import json
 from tkhtmlview import HTMLLabel
 import nltk
 from sentence_transformers import SentenceTransformer, util
@@ -43,6 +42,7 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
         self.zotero = self.import_dict(self.p, 'Zotero_data')
         self.tagging = 0
+        self.accepted_order = [k for k in range(6)]
         self.window = window
 
         self.var = IntVar()
@@ -273,6 +273,7 @@ class Biblio:
                     ['-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ']]
         ct = [0, 0, 0, 0, 0, 0]
         built_plan = ['' for k in range(len(self.plan["position"]))]
+        
         for p in range(len(self.plan["position"])):
             k = self.plan["position"].index(p)
             for l in self.tag_list:
@@ -365,43 +366,47 @@ class Biblio:
         self.shell_label.configure(text='New category? :')
         self.tag_next_but.wait_variable(self.var)
         new_tag = self.shell_text.get("1.0", "end-1c")
-        if new_tag not in [j[0] for j in self.tag_list]:
-            if len(self.plan["ID"]) == 0:
-                new_ID = 1
-            else:
-                new_ID = max(self.plan["ID"]) + 1
-            self.plan["ID"] += [new_ID]
-            # if no position has been selected
-            if len(pos) == 0:
-                position = 0
-            else:
-                position = pos[0] + 1
-            if position in self.plan["position"]:
-                for k in range(len(self.plan["position"])):
-                    if position <= self.plan["position"][k]:
-                        self.plan["position"][k] += 1
-            self.plan["position"] += [position]
-            # Get tag order
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='order :')
-            self.tag_next_but.wait_variable(self.var)
-            self.plan["order"] += [int(self.shell_text.get("1.0", "end-1c"))]
-            self.plan["note"] += ['']
-            self.blocs["tag"][0] += [[new_tag, new_ID]]
 
-            self.shell_text.delete("1.0", "end-1c")
-            self.shell_label.configure(text='Shell :')
+        # Get tag order
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='order :')
+            
+        self.tag_next_but.wait_variable(self.var)
+        input_order = int(self.shell_text.get("1.0", "end-1c"))
+        if input_order in self.accepted_order:
+            if new_tag not in [j[0] for j in self.tag_list]:
+                if len(self.plan["ID"]) == 0:
+                    new_ID = 1
+                else:
+                    new_ID = max(self.plan["ID"]) + 1
+                self.plan["ID"] += [new_ID]
+                # if no position has been selected
+                if len(pos) == 0:
+                    position = 0
+                else:
+                    position = pos[0] + 1
+                if position in self.plan["position"]:
+                    for k in range(len(self.plan["position"])):
+                        if position <= self.plan["position"][k]:
+                            self.plan["position"][k] += 1
+                self.plan["position"] += [position]
+                self.plan["order"] += [input_order]
+                self.plan["note"] += ['']
+                self.blocs["tag"][0] += [[new_tag, new_ID]]
 
-            self.save_dict(self.p, 'blocs', self.blocs)
-            self.blocs = self.import_dict(self.p, 'blocs')
-            self.tag_list = self.build_tag_list(self.blocs)
-            self.save_dict(self.p, 'plan', self.plan)
-            self.plan = self.import_dict(self.p, 'plan')
+                self.save_dict(self.p, 'blocs', self.blocs)
+                self.blocs = self.import_dict(self.p, 'blocs')
+                self.tag_list = self.build_tag_list(self.blocs)
+                self.save_dict(self.p, 'plan', self.plan)
+                self.plan = self.import_dict(self.p, 'plan')
 
-            self.plan_listbox.delete(0, END)
-            new = self.build_plan()
-            for k in range(len(new)):
-                self.plan_listbox.insert(k, new[k])
+                self.plan_listbox.delete(0, END)
+                new = self.build_plan()
+                for k in range(len(new)):
+                    self.plan_listbox.insert(k, new[k])
+                    
+        self.shell_text.delete("1.0", "end-1c")
+        self.shell_label.configure(text='Shell :')
 
     def delete_plan(self):
         pos = self.plan_listbox.curselection()[0]
@@ -1009,7 +1014,10 @@ def init_dict():
             pickle.dump(d, f)
 
         print('No Zotero folder found')
-        path = askdirectory(title='Select Zotero folder location')
+        dialog = Tk()
+        dialog.withdraw()
+        path = askdirectory(parent=dialog, title='Select Zotero folder location')
+        dialog.destroy()
         target_collection = input("Enter the parent Zotero collection you are working with : ")
         d = dict(path=path, target_collection=target_collection)
         with open(p + "\\Zotero_data.pkl", 'wb') as f:
