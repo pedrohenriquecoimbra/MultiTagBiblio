@@ -5,7 +5,7 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx']
+dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx', 'datetime', 'shutil']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -27,6 +27,8 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering
 import docx
+from datetime import datetime
+import shutil
 
 
 # Functions
@@ -136,7 +138,7 @@ class Biblio:
             height=1,
             width=10,
             command=self.edit_notes_from_plan)
-        self.take_note_but.place(x=1300, y=650)
+        self.take_note_but.place(x=1300, y=600)
 
         self.del_tag_but = Button(
             window,
@@ -184,7 +186,7 @@ class Biblio:
             height=1,
             width=10,
             command=lambda: self.save_var.set(1))
-        self.save_note_but.place(x=1300, y=700)
+        self.save_note_but.place(x=1300, y=650)
 
         self.export_but = Button(
             window,
@@ -192,7 +194,15 @@ class Biblio:
             height=1,
             width=10,
             command=self.export_all)
-        self.export_but.place(x=1400, y=750)
+        self.export_but.place(x=1430, y=700)
+
+        self.backup_but = Button(
+            window,
+            text='Backup',
+            height=1,
+            width=10,
+            command=self.backup)
+        self.backup_but.place(x=1430, y=750)
 
         self.plan_listbox = Listbox(
             window,
@@ -271,7 +281,7 @@ class Biblio:
                     ['1. ', '2. ', '3. ', '4. ', '5. ', '6. ', '7. ', '8. ', '9. ', '10. '],
                     ['a. ', 'b. ', 'c. ', 'd. ', 'e. ', 'f. ', 'g. ', 'h. ', 'i. ', 'j. '],
                     ['i. ', 'ii. ', 'iii. ', 'iv. ', 'v. ', 'vi. ', 'vii. ', 'viii. ', 'ix. ', 'x. '],
-                    ['-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ', '-> ']]
+                    ['->. ', '->. ', '->. ', '->. ', '->. ', '->. ', '->. ', '->. ', '->. ', '->. ']]
         ct = [0, 0, 0, 0, 0, 0]
         built_plan = ['' for k in range(len(self.plan["position"]))]
         
@@ -408,6 +418,7 @@ class Biblio:
                     
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='Shell :')
+        self.plan_listbox.select_set(pos[0]+1)
 
     def delete_plan(self):
         pos = self.plan_listbox.curselection()[0]
@@ -447,6 +458,8 @@ class Biblio:
         pos = self.plan_listbox.curselection()[0]
         # Ask user input
         self.shell_text.delete("1.0", "end-1c")
+        old = self.plan_listbox.get(pos)
+        self.shell_text.insert(END, old[old.index('. ')+2:])
         self.shell_label.configure(text='Change name to :')
         self.tag_next_but.wait_variable(self.var)
         new_name = self.shell_text.get("1.0", "end-1c")
@@ -947,6 +960,7 @@ class Biblio:
     # Exchanges with word
 
     def export_all(self):
+        cwd = os.getcwd()
         doc = docx.Document()
 
         headers = [[] for k in self.tag_list]
@@ -956,10 +970,27 @@ class Biblio:
                     headers[self.plan["position"][m]] = [self.tag_list[k][0], self.plan["order"][m], self.plan["note"][m]]
         
         for k in headers:
-            doc.add_heading(k[0], level=k[1]+1)
-            doc.add_paragraph(k[2])
+            if k != []:
+                doc.add_heading(k[0], level=k[1]+1)
+                doc.add_paragraph(k[2])
 
-        doc.save("docx\\biblio_analysis.docx")
+        filepath = cwd + "\\docx\\biblio_analysis.docx"
+        doc.save(filepath)
+
+        # for windows users only
+        os.startfile(filepath)
+
+    # Backup files and version in case of bug
+
+    def backup(self):
+        cwd = os.getcwd()
+        folder = datetime.today().strftime('%Y-%m-%d-%H-%M')
+        os.makedirs(cwd + "\\Backup\\" + folder)
+
+        shutil.copyfile(cwd + "\\MultiTagBiblio.py", cwd + "\\Backup\\" + folder + "\\MultiTagBiblio.py")
+        shutil.copytree(cwd + "\\Storage", cwd + "\\Backup\\" + folder + "\\Storage")
+
+
 
 class ArticleInfo:
     def __init__(self, key, zotero):
@@ -1053,6 +1084,8 @@ def init_dict():
             pickle.dump(d, f)
     if not os.path.exists(cwd + "\\docx"):
         os.makedirs(cwd + "\\docx")
+    if not os.path.exists(cwd + "\\Backup"):
+        os.makedirs(cwd + "\\Backup")
 
 
 def unique(X):
