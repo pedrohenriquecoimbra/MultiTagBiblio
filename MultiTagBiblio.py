@@ -30,6 +30,7 @@ import docx
 from datetime import datetime
 import shutil
 import win32com.client
+import ctypes
 
 
 # Functions
@@ -1090,7 +1091,6 @@ def init_dict():
     
     # Create windows system shortcuts
     startup = "C:\\Users\\" + os.getlogin() + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"
-    taskbar = "C:\\Users\\" + os.getlogin() + "\\AppData\\Roaming\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar"
     target = cwd + "\\MultiTagBiblio.bat"
     if not os.path.exists(startup + "\\MultiTagBiblio.lnk"):
         print("Creating quick access shortcuts")
@@ -1099,13 +1099,7 @@ def init_dict():
         shortcut.Targetpath = 'cmd.exe'
         shortcut.Arguments = '/C "' + target + '"'
         shortcut.WorkingDirectory = cwd
-        shortcut.WindowStyle = 1
-        shortcut.save()
-
-        shortcut = shell.CreateShortCut(taskbar + "\\MultiTagBiblio.lnk")
-        shortcut.Targetpath = 'cmd.exe'
-        shortcut.Arguments = '/C "' + target + '"'
-        shortcut.WorkingDirectory = cwd
+        shortcut.IconLocation = cwd + "\\bin\\MTB_logo.ico"
         shortcut.WindowStyle = 1
         shortcut.save()
 
@@ -1119,11 +1113,14 @@ def unique(X):
 
 
 # Script
-
+cwd = os.getcwd()
+myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
 win.state('zoomed')
 win.configure(bg='#96CDCD')
+win.iconbitmap("bin\\MTB_logo.ico")
 mt = Biblio(win)
 win.mainloop()
