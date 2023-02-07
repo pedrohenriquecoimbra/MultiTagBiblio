@@ -492,13 +492,18 @@ class Biblio:
         # Add if not in MultiTagBiblio
         sources, highlights, notes = self.zotero_import()
         for k in range(len(highlights)):
+            to_add = 1
+            for p in self.blocs["text"]:
+                if highlights[k] in p:
+                    to_add = 0
+                    break
             if highlights[k] == 'Just a note':
                 if "NOTE : " + notes[k] not in self.blocs['text']:
                     self.blocs['text'] += ["NOTE : " + notes[k]]
                     self.blocs['source'] += [sources[k]]
                     self.blocs['tag'] += [[]]
 
-            elif highlights[k] not in self.blocs['text']:
+            elif to_add == 1:
                 self.blocs['text'] += [highlights[k]]
                 self.blocs['source'] += [sources[k]]
                 self.blocs['tag'] += [[]]
@@ -526,7 +531,12 @@ class Biblio:
                         del self.blocs["tag"][k]
                         deleted += 1
                 else:
-                    if self.blocs["text"][k] not in highlights:
+                    to_delete = 1
+                    for p in highlights:
+                        if p in self.blocs["text"][k]:
+                            to_delete = 0
+                            break
+                    if to_delete == 1:
                         del self.blocs["text"][k]
                         del self.blocs["source"][k]
                         del self.blocs["tag"][k]
