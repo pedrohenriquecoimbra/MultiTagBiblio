@@ -42,6 +42,7 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
         self.zotero = self.import_dict(self.p, 'Zotero_data')
         self.tagging = 0
+        self.noting = 0
         self.accepted_order = [k for k in range(6)]
         self.window = window
 
@@ -474,8 +475,13 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
 
     def edit_notes_from_plan(self):
+        self.noting = 1
+        self.notes_text.config(bg='#FFFACD')
+        self.save_note_but.config(bg = '#CDC9A5')
         # Get corresponding notes
-        pos = self.plan["position"].index(self.plan_listbox.curselection()[0])
+        cursor = self.plan_listbox.curselection()[0]
+        pos = self.plan["position"].index(cursor)
+        self.plan_listbox.itemconfig(index=cursor, bg = '#CDC9A5')
         self.notes_text.delete('1.0', "end-1c")
         self.notes_text.insert("1.0", self.plan["note"][pos])
         # Wait for save button press
@@ -485,6 +491,10 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
+        self.notes_text.config(bg='white')
+        self.plan_listbox.itemconfig(index=cursor, bg = 'white')
+        self.save_note_but.config(bg = '#f0f0f0')
+        self.noting = 0
 
     # Blocs management
 
@@ -719,6 +729,8 @@ class Biblio:
 
     def blocs_filter_plan(self, event):
         if self.tagging == 0:
+            if self.noting == 0:
+                self.notes_text.delete("1.0", "end-1c")
             cursor = self.plan_listbox.curselection()
             for i in cursor:
                 pos = self.plan["position"].index(i)
@@ -734,11 +746,16 @@ class Biblio:
                 sources = unique(sources)
 
                 self.blocs_listbox.delete(0, END)
+                for k in [unique(self.blocs["source"]).index(l) for l in self.blocs["source"]]:
+                    self.source_listbox.itemconfig(k, bg="white")
                 for k in selected:
                     self.blocs_listbox.insert(END, k)
                 for k in sources:
                     index = self.source_listbox.get(0, "end").index(k[0])
                     self.source_listbox.itemconfig(index, bg='green')
+                
+                if self.noting == 0:
+                    self.notes_text.insert(END, self.plan["note"][pos] + '\n----\n')
 
     def blocs_filter_sources(self, event):
         pos = self.source_listbox.curselection()[0]
@@ -816,7 +833,8 @@ class Biblio:
             for k in [unique(self.blocs["source"]).index(l) for l in self.blocs["source"]]:
                 self.source_listbox.itemconfig(k, bg="white")
             for k in self.plan["position"]:
-                self.plan_listbox.itemconfig(k, bg='white')
+                if self.plan_listbox.itemcget(k, "bg") != '#CDC9A5':
+                    self.plan_listbox.itemconfig(k, bg='white')
 
             for i in self.blocs_listbox.curselection():
                 # Display in shell
@@ -831,7 +849,8 @@ class Biblio:
                         for k in self.blocs["tag"][j]:
                             for m in range(len(self.plan["ID"])):
                                 if k[1] == self.plan["ID"][m]:
-                                    self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
+                                    if self.plan_listbox.itemcget(self.plan["position"][m], "bg") != '#CDC9A5':
+                                        self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
 
                 self.shell_text.insert(END, '\n----\n')
 
