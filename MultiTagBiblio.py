@@ -52,6 +52,8 @@ class Biblio:
 
         self.var = IntVar()
 
+        self.window.bind('<Key>', self.next_press)
+
         self.merge_var = IntVar()
 
         self.save_var = IntVar()
@@ -158,13 +160,13 @@ class Biblio:
             command=self.edit_plan)
         self.edit_tag_but.place(x=290, y=500)
 
-        self.tag_next_but = Button(
-            window,
-            text='Next',
-            height=1,
-            width=10,
-            command=lambda: self.var.set(1))
-        self.tag_next_but.place(x=1200, y=500)
+        # self.tag_next_but = Button(
+        #     window,
+        #     text='Next',
+        #     height=1,
+        #     width=10,
+        #     command=lambda: self.var.set(1))
+        # self.tag_next_but.place(x=1200, y=500)
 
         self.search_but = Button(
             window,
@@ -377,14 +379,14 @@ class Biblio:
         # Get plan tag name
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='New category? :')
-        self.tag_next_but.wait_variable(self.var)
+        self.window.wait_variable(self.var)
         new_tag = self.shell_text.get("1.0", "end-1c")
 
         # Get tag order
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='order :')
             
-        self.tag_next_but.wait_variable(self.var)
+        self.window.wait_variable(self.var)
         input_order = int(self.shell_text.get("1.0", "end-1c"))
         if input_order in self.accepted_order:
             if new_tag not in [j[0] for j in self.tag_list]:
@@ -463,7 +465,7 @@ class Biblio:
         old = self.plan_listbox.get(pos)
         self.shell_text.insert(END, old[old.index('. ')+2:])
         self.shell_label.configure(text='Change name to :')
-        self.tag_next_but.wait_variable(self.var)
+        self.window.wait_variable(self.var)
         new_name = self.shell_text.get("1.0", "end-1c")
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='Shell :')
@@ -623,7 +625,7 @@ class Biblio:
                                     self.plan_listbox.select_set(self.plan["position"][m])
                                     # switch to select set
                 # Wait for button press
-                self.tag_next_but.wait_variable(self.var)
+                self.window.wait_variable(self.var)
                 self.blocs_listbox.itemconfig(current[k], bg='white')
                 add = []
                 focus = self.plan_listbox.curselection()
@@ -677,7 +679,7 @@ class Biblio:
                                 if i[1] == self.plan["ID"][m]:
                                     self.plan_listbox.itemconfig(self.plan["position"][m], bg='green')
                 # Wait for button press
-                self.tag_next_but.wait_variable(self.var)
+                self.window.wait_variable(self.var)
                 if self.merge_var.get() == 1:
                     deleted += 1
                     # Merge text
@@ -729,6 +731,10 @@ class Biblio:
             if self.plan["position"][k] < position and self.plan["order"][k] == self.plan["order"][self.plan["position"].index(position)] - 1:
                 parent += [self.plan["position"][k]]
         return max(parent)
+
+    def next_press(self, event):
+        if event.keysym == 'Return':
+            self.var.set(1)
 
     # Blocs visualization filters
 
@@ -809,7 +815,7 @@ class Biblio:
         self.shell_text.delete('1.0', "end-1c")
         self.shell_label.configure(text='Number of clusters? :')
         plt.show()
-        self.tag_next_but.wait_variable(self.var)
+        self.window.wait_variable(self.var)
         nb_clusters = int(self.shell_text.get("1.0", "end-1c"))
 
         hierarchical_cluster = AgglomerativeClustering(n_clusters=nb_clusters, affinity='euclidean', linkage='ward')
@@ -1113,9 +1119,10 @@ def unique(X):
 
 
 # Script
-cwd = os.getcwd()
-myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+
+myappid = 'inrae.multitagbiblio.zotero.1.0' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
