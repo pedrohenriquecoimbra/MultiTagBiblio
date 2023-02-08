@@ -404,7 +404,6 @@ class Biblio:
         # to be called on edit button press
         pos = self.plan_listbox.curselection()
         current_order = self.plan["order"][self.plan["position"].index(pos[0])]
-        print(current_order)
         # Get plan tag name
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='New category? :')
@@ -1005,7 +1004,7 @@ class Biblio:
                     elif items_annotations[k][j][2] == None and items_annotations[k][j][3] != None:
                         highlights += ['Just a note']
                         notes += [items_annotations[k][j][3]]
-                    else:
+                    elif items_annotations[k][j][2] != None and items_annotations[k][j][3] != None:
                         highlights += [items_annotations[k][j][2]]
                         notes += [items_annotations[k][j][3]]
 
