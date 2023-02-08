@@ -52,8 +52,6 @@ class Biblio:
 
         self.var = IntVar()
 
-        self.window.bind('<Key>', self.next_press)
-
         self.merge_var = IntVar()
 
         self.save_var = IntVar()
@@ -744,7 +742,6 @@ class Biblio:
         return max(parent)
 
     def next_press(self, event):
-        print(event.keysym)
         if event.keysym == 'Return':
             self.var.set(1)
 
