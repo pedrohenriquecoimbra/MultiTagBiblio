@@ -60,13 +60,13 @@ class Biblio:
             window,
             text='Merge ?',
             variable=self.merge_var)
-        self.merge_tick.place(x=1300, y=500)
+        self.merge_tick.place(x=750, y=500)
 
         self.input_but = Button(
             window,
             text='Import Zot',
             height=1,
-            width=10,
+            width=9,
             command=self.add_to_blocs)
         self.input_but.place(x=380, y=460)
 
@@ -74,9 +74,9 @@ class Biblio:
             window,
             text='Info',
             height=1,
-            width=7,
+            width=9,
             command=self.send_key)
-        self.info_but.place(x=460, y=460)
+        self.info_but.place(x=470, y=460)
 
         self.del_art_but = Button(
             window,
@@ -92,7 +92,7 @@ class Biblio:
             height=1,
             width=10,
             command=self.tag_blocs)
-        self.tag_but.place(x=1100, y=500)
+        self.tag_but.place(x=650, y=500)
 
         self.up_but = Button(
             window,
@@ -100,7 +100,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_up_plan)
-        self.up_but.place(x=70, y=495)
+        self.up_but.place(x=10, y=450)
 
         self.down_but = Button(
             window,
@@ -108,7 +108,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_down_plan)
-        self.down_but.place(x=70, y=522)
+        self.down_but.place(x=10, y=480)
 
         self.left_but = Button(
             window,
@@ -116,7 +116,7 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_left_plan)
-        self.left_but.place(x=38, y=507)
+        self.left_but.place(x=10, y=515)
 
         self.right_but = Button(
             window,
@@ -124,15 +124,31 @@ class Biblio:
             height=1,
             width=3,
             command=self.move_right_plan)
-        self.right_but.place(x=102, y=507)
+        self.right_but.place(x=45, y=515)
 
         self.add_tag_but = Button(
             window,
-            text='Add',
+            text='Add here',
             height=1,
             width=7,
             command=self.add_plan)
         self.add_tag_but.place(x=150, y=500)
+
+        self.add_low_tag_but = Button(
+            window,
+            text='-> add lower',
+            height=1,
+            width=11,
+            command=self.add_plan_low)
+        self.add_low_tag_but.place(x=180, y=530)
+
+        self.add_high_tag_but = Button(
+            window,
+            text='add upper <-',
+            height=1,
+            width=11,
+            command=self.add_plan_high)
+        self.add_high_tag_but.place(x=90, y=530)
 
         self.take_note_but = Button(
             window,
@@ -140,7 +156,15 @@ class Biblio:
             height=1,
             width=10,
             command=self.edit_notes_from_plan)
-        self.take_note_but.place(x=1300, y=600)
+        self.take_note_but.place(x=1270, y=570)
+
+        self.ref_but = Button(
+            window,
+            text='Link Ref',
+            height=1,
+            width=10,
+            command=self.edit_notes_from_plan)
+        self.ref_but.place(x=1270, y=610)
 
         self.del_tag_but = Button(
             window,
@@ -148,7 +172,7 @@ class Biblio:
             height=1,
             width=7,
             command=self.delete_plan)
-        self.del_tag_but.place(x=220, y=500)
+        self.del_tag_but.place(x=290, y=530)
 
         self.edit_tag_but = Button(
             window,
@@ -158,21 +182,13 @@ class Biblio:
             command=self.edit_plan)
         self.edit_tag_but.place(x=290, y=500)
 
-        # self.tag_next_but = Button(
-        #     window,
-        #     text='Next',
-        #     height=1,
-        #     width=10,
-        #     command=lambda: self.var.set(1))
-        # self.tag_next_but.place(x=1200, y=500)
-
         self.search_but = Button(
             window,
             text='Search',
             height=1,
             width=7,
             command=self.blocs_filter_search)
-        self.search_but.place(x=800, y=500)
+        self.search_but.place(x=1310, y=500)
 
         self.topics_but = Button(
             window,
@@ -180,7 +196,7 @@ class Biblio:
             height=1,
             width=7,
             command=self.blocs_main_subjects)
-        self.topics_but.place(x=860, y=500)
+        self.topics_but.place(x=1380, y=500)
 
         self.save_note_but = Button(
             window,
@@ -188,7 +204,7 @@ class Biblio:
             height=1,
             width=10,
             command=lambda: self.save_var.set(1))
-        self.save_note_but.place(x=1300, y=650)
+        self.save_note_but.place(x=1270, y=650)
 
         self.export_but = Button(
             window,
@@ -239,7 +255,7 @@ class Biblio:
             window,
             height=1,
             width=30)
-        self.search_text.place(x=550, y=500)
+        self.search_text.place(x=1050, y=500)
 
         self.shell_label = Label(window, text="Shell :")
         self.shell_label.place(x=1000, y=10)
@@ -254,7 +270,7 @@ class Biblio:
             window,
             height=14,
             width=150)
-        self.notes_text.place(x=50, y=550)
+        self.notes_text.place(x=50, y=560)
 
     # Dictionary management
 
@@ -357,9 +373,7 @@ class Biblio:
         if target != -1:
             self.plan_listbox.select_set(pos - 1)
         else:
-            self.plan_listbox.select_set(pos)
-        
-        
+            self.plan_listbox.select_set(pos) 
 
     def move_down_plan(self):
         pos = self.plan_listbox.curselection()[0]
@@ -386,10 +400,11 @@ class Biblio:
         else:
             self.plan_listbox.select_set(pos)
 
-    def add_plan(self):
+    def add_plan(self, order_option=0):
         # to be called on edit button press
         pos = self.plan_listbox.curselection()
-
+        current_order = self.plan["order"][self.plan["position"].index(pos[0])]
+        print(current_order)
         # Get plan tag name
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='New category? :')
@@ -399,13 +414,7 @@ class Biblio:
         new_tag = self.shell_text.get("1.0", "end-1c")
 
         # Get tag order
-        self.shell_text.delete("1.0", "end-1c")
-        self.shell_label.configure(text='order :')
-            
-        self.window.bind('<Key>', self.next_press)
-        self.window.wait_variable(self.var)
-        self.window.unbind('<Key>')
-        input_order = int(self.shell_text.get("1.0", "end-1c"))
+        input_order = current_order + order_option
         if input_order in self.accepted_order:
             if new_tag not in [j[0] for j in self.tag_list]:
                 if len(self.plan["ID"]) == 0:
@@ -415,6 +424,7 @@ class Biblio:
                 self.plan["ID"] += [new_ID]
                 # if no position has been selected
                 if len(pos) == 0:
+                    input_order = 0
                     position = 0
                 else:
                     position = pos[0] + 1
@@ -437,10 +447,16 @@ class Biblio:
                 new = self.build_plan()
                 for k in range(len(new)):
                     self.plan_listbox.insert(k, new[k])
-                    
+                self.plan_listbox.select_set(pos[0]+1)
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='Shell :')
-        self.plan_listbox.select_set(pos[0]+1)
+        
+
+    def add_plan_low(self):
+        self.add_plan(order_option=1)
+
+    def add_plan_high(self):
+        self.add_plan(order_option=-1)
 
     def delete_plan(self):
         pos = self.plan_listbox.curselection()[0]
