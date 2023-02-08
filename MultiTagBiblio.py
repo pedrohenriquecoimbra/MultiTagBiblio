@@ -550,14 +550,14 @@ class Biblio:
         self.noting = 0
 
     def insert_ref(self):
-        # get pointer position
+        cursor = self.notes_text.index(INSERT)
         sources = " ("
         selected = self.source_listbox.curselection()
         for k in selected:
             sources += self.source_listbox.get(k) + " ; "
         sources = sources[:-3]
         sources += ")"
-        self.notes_text.insert(END, sources)
+        self.notes_text.insert(cursor, sources)
 
     # Blocs management
 
