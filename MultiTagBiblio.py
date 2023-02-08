@@ -602,6 +602,7 @@ class Biblio:
 
     def tag_blocs(self):
         self.tagging = 1
+        self.tag_but.config(bg = '#CDC9A5')
         self.tag_list = self.build_tag_list(self.blocs)
         selected = []
         source = self.source_listbox.curselection()
@@ -667,17 +668,19 @@ class Biblio:
 
                 if self.merge_var.get() == 0:
                     add_tag = self.blocs["text"].index(selected[k])
-                if l < len(selected) - 1:
+
+                if k < len(selected) - 1:
                     next = self.blocs["text"].index(selected[k + 1])
                     self.shell_text.insert(END, self.blocs["text"][add_tag] + '\n\nNext : \n\n' + self.blocs["text"][next])
                 else:
                     self.shell_text.insert(END, self.blocs["text"][add_tag])
+                
                 self.merge_var.set(0)
 
                 # Show existing tags
                 # Reset colors
-                for k in self.plan["position"]:
-                    self.plan_listbox.itemconfig(k, bg='white')
+                for r in self.plan["position"]:
+                    self.plan_listbox.itemconfig(r, bg='white')
                 # Color existing tags
                 for j in range(len(self.blocs["text"])):
                     if self.blocs["text"][j] == self.blocs["text"][add_tag]:
@@ -695,7 +698,8 @@ class Biblio:
                     self.blocs["text"][add_tag] += self.blocs["text"][next]
                     # Merge existing tags
                     self.blocs["tag"][add_tag] += self.blocs["tag"][next]
-
+                    print(selected)
+                    print(selected[k])
                     del selected[k + 1]
                     del self.blocs["text"][next]
                     del self.blocs["source"][next]
@@ -733,6 +737,7 @@ class Biblio:
         self.plan = self.import_dict(self.p, 'plan')
 
         self.tagging = 0
+        self.tag_but.config(bg = '#f0f0f0')
 
     def get_parent(self, position):
         parent = []
