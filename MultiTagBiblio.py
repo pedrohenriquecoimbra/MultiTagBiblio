@@ -316,6 +316,7 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
+        self.plan_listbox.select_set(pos[0])
 
     def move_right_plan(self):
         pos = self.plan_listbox.curselection()
@@ -331,17 +332,20 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
+        self.plan_listbox.select_set(pos[0])
 
     def move_up_plan(self):
         pos = self.plan_listbox.curselection()[0]
+        target = -1
         for k in range(len(self.plan["position"])):
             if pos == self.plan["position"][k]:
                 current = k
             elif pos - 1 == self.plan["position"][k]:
                 target = k
-        tp = self.plan["position"][target]
-        self.plan["position"][target] = self.plan["position"][current]
-        self.plan["position"][current] = tp
+        if target != -1:
+            tp = self.plan["position"][target]
+            self.plan["position"][target] = self.plan["position"][current]
+            self.plan["position"][current] = tp
 
         self.plan_listbox.delete(0, END)
         new = self.build_plan()
@@ -350,17 +354,25 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
+        if target != -1:
+            self.plan_listbox.select_set(pos - 1)
+        else:
+            self.plan_listbox.select_set(pos)
+        
+        
 
     def move_down_plan(self):
         pos = self.plan_listbox.curselection()[0]
+        target = -1
         for k in range(len(self.plan["position"])):
             if pos == self.plan["position"][k]:
                 current = k
             elif pos + 1 == self.plan["position"][k]:
                 target = k
-        tp = self.plan["position"][target]
-        self.plan["position"][target] = self.plan["position"][current]
-        self.plan["position"][current] = tp
+        if target != -1:
+            tp = self.plan["position"][target]
+            self.plan["position"][target] = self.plan["position"][current]
+            self.plan["position"][current] = tp
 
         self.plan_listbox.delete(0, END)
         new = self.build_plan()
@@ -369,6 +381,10 @@ class Biblio:
 
         self.save_dict(self.p, 'plan', self.plan)
         self.plan = self.import_dict(self.p, 'plan')
+        if target != -1:
+            self.plan_listbox.select_set(pos + 1)
+        else:
+            self.plan_listbox.select_set(pos)
 
     def add_plan(self):
         # to be called on edit button press
@@ -698,8 +714,6 @@ class Biblio:
                     self.blocs["text"][add_tag] += self.blocs["text"][next]
                     # Merge existing tags
                     self.blocs["tag"][add_tag] += self.blocs["tag"][next]
-                    print(selected)
-                    print(selected[k])
                     del selected[k + 1]
                     del self.blocs["text"][next]
                     del self.blocs["source"][next]
