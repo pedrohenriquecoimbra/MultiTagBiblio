@@ -262,15 +262,19 @@ class Biblio:
 
         self.shell_text = Text(
             window,
-            height=28,
+            height=23,
             width=60,
-            exportselection=False)
+            exportselection=False,
+            wrap=WORD,
+            font=('Calibri',12))
         self.shell_text.place(x=1000, y=40)
 
         self.notes_text = Text(
             window,
-            height=14,
-            width=150)
+            height=11,
+            width=150,
+            wrap=WORD,
+            font=('Calibri',12))
         self.notes_text.place(x=50, y=560)
 
     # Dictionary management
@@ -624,22 +628,23 @@ class Biblio:
 
     def delete_article(self):
         pos = self.source_listbox.curselection()[0]
-        article = self.source_listbox.get(pos)
-        deleted = 0
-        for j in range(len(self.blocs["source"])):
-            k = j - deleted
-            if self.blocs["source"][k][0] == article:
-                del self.blocs["text"][k]
-                del self.blocs["source"][k]
-                del self.blocs["tag"][k]
-                deleted += 1
+        if self.source_listbox.get(pos) != "default":
+            article = self.source_listbox.get(pos)
+            deleted = 0
+            for j in range(len(self.blocs["source"])):
+                k = j - deleted
+                if self.blocs["source"][k][0] == article:
+                    del self.blocs["text"][k]
+                    del self.blocs["source"][k]
+                    del self.blocs["tag"][k]
+                    deleted += 1
 
-        self.save_dict(self.p, 'blocs', self.blocs)
-        self.blocs = self.import_dict(self.p, 'blocs')
+            self.save_dict(self.p, 'blocs', self.blocs)
+            self.blocs = self.import_dict(self.p, 'blocs')
 
-        self.source_listbox.delete(0, END)
-        for k in unique(self.blocs["source"]):
-            self.source_listbox.insert(END, k[0])
+            self.source_listbox.delete(0, END)
+            for k in unique(self.blocs["source"]):
+                self.source_listbox.insert(END, k[0])
 
     def tag_blocs(self):
         self.tagging = 1
@@ -845,9 +850,8 @@ class Biblio:
     def blocs_filter_search(self):
         self.blocs_listbox.delete(0, END)
         request = self.search_text.get("1.0", "end-1c")
-        lemma = nltk.stem.WordNetLemmatizer().lemmatize(request)
         for k in self.blocs["text"]:
-            if lemma in k:
+            if request.lower() in k.lower():
                 self.blocs_listbox.insert(END, k)
 
     def blocs_main_subjects(self):
@@ -946,17 +950,35 @@ class Biblio:
         cur = conn.cursor()
         
         # IF YOU WANT TO EXPLORE ZOTERO DATABASE TABLES NAMES
-        #sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
-        #print(cur.execute(sql_query).fetchall())
+        # cursor = cur.execute('SELECT * FROM collections')
+        # names = list(map(lambda x: x[0], cursor.description))
+        # print(names)
 
 
         sql = """SELECT collectionID FROM collections WHERE collectionName='""" + self.zotero["target_collection"] + "';"
         cursor = cur.execute(sql)
         parent = cursor.fetchall()[0][0]
 
-        sql = """SELECT itemID FROM collectionItems WHERE collectionID=""" + str(parent) + ";"
+        sql = """SELECT collectionID FROM collections WHERE parentCollectionID=""" + str(parent) + ";"
         cursor = cur.execute(sql)
-        items = [k[0] for k in cursor.fetchall()]
+        childs = [k[0] for k in cursor.fetchall()]
+
+        familly = [parent]
+        while len(childs) != 0:
+            tp = []
+            for k in childs:
+                familly += [k]
+                sql = """SELECT collectionID FROM collections WHERE parentCollectionID=""" + str(k) + ";"
+                cursor = cur.execute(sql)
+                tp += [k[0] for k in cursor.fetchall()]
+            childs = tp
+
+        items = []
+        for k in familly:
+            sql = """SELECT itemID FROM collectionItems WHERE collectionID=""" + str(k) + ";"
+            cursor = cur.execute(sql)
+            items += [k[0] for k in cursor.fetchall()]
+        items = unique(items)
 
         sql = """SELECT parentItemID, type, text, comment, sortIndex FROM itemAnnotations WHERE type=1 OR type=2"""
         cursor = cur.execute(sql)
@@ -997,8 +1019,6 @@ class Biblio:
                 date = '?'
             
             source[k] = [first_author + ' et al., ' + date, items[k]]
-
-        # Just adapt bellow from items, items annotations, source
 
         sources, highlights, notes = [], [], []
         for k in range(len(items_annotations)):
