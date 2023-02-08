@@ -551,12 +551,12 @@ class Biblio:
 
     def insert_ref(self):
         cursor = self.notes_text.index(INSERT)
-        sources = " ("
+        sources = "("
         selected = self.source_listbox.curselection()
         for k in selected:
             sources += self.source_listbox.get(k) + " ; "
         sources = sources[:-3]
-        sources += ")"
+        sources += ") "
         self.notes_text.insert(cursor, sources)
 
     # Blocs management
@@ -1030,12 +1030,25 @@ class Biblio:
         for k in range(len(self.tag_list)):
             for m in range(len(self.plan["ID"])):
                 if self.tag_list[k][1] == self.plan["ID"][m]:
-                    headers[self.plan["position"][m]] = [self.tag_list[k][0], self.plan["order"][m], self.plan["note"][m]]
+                    sources = []
+                    # Skip the firt 'default' source
+                    for n in range(1, len(self.blocs["text"])):
+                        for o in range(len(self.blocs["tag"][n])):
+                            if len(self.blocs["tag"][n][o]) > 0:
+                                if self.blocs["tag"][n][o][1] == self.plan["ID"][m]:
+                                    sources += [self.blocs["source"][n][0]]
+                    printed_sources = ''
+                    for p in unique(sources):
+                        printed_sources += p + " ; "
+                    headers[self.plan["position"][m]] = [self.tag_list[k][0], self.plan["order"][m], self.plan["note"][m], printed_sources[:-3]]
+
         
         for k in headers:
             if k != []:
                 doc.add_heading(k[0], level=k[1]+1)
-                doc.add_paragraph(k[2])
+                if len(k[2]) > 0:
+                    doc.add_paragraph(k[2])
+                    doc.add_paragraph(str(k[3]))
 
         filepath = cwd + "\\docx\\biblio_analysis.docx"
         doc.save(filepath)
