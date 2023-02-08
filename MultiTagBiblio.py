@@ -5,7 +5,7 @@ import subprocess
 cwd = os.getcwd()
 p = cwd + "\\Storage"
 # Check whether the specified path exists or not
-dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'sklearn', 'python-docx', 'datetime', 'shutil', 'pywin32']
+dependencies = ['tk', 'tkhtmlview', 'nltk', 'sentence_transformers', 'matplotlib', 'scipy', 'scikit-learn', 'python-docx', 'datetime', 'pywin32']
 if not os.path.exists(p):
     setup = input("First time use, install dependancies? (y/n) :")
     if setup == 'y':
@@ -1110,15 +1110,17 @@ def init_dict():
     startup = "C:\\Users\\" + os.getlogin() + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"
     target = cwd + "\\MultiTagBiblio.bat"
     if not os.path.exists(startup + "\\MultiTagBiblio.lnk"):
-        print("Creating quick access shortcuts")
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortCut(startup + "\\MultiTagBiblio.lnk")
-        shortcut.Targetpath = 'cmd.exe'
-        shortcut.Arguments = '/C "' + target + '"'
-        shortcut.WorkingDirectory = cwd
-        shortcut.IconLocation = cwd + "\\bin\\MTB_logo.ico"
-        shortcut.WindowStyle = 1
-        shortcut.save()
+        ask_user = input("Do you want to create a shortcut ? (y/n) : ")
+        if ask_user == "y":
+            print("Creating quick access shortcuts")
+            shell = win32com.client.Dispatch("WScript.Shell")
+            shortcut = shell.CreateShortCut(startup + "\\MultiTagBiblio.lnk")
+            shortcut.Targetpath = 'cmd.exe'
+            shortcut.Arguments = '/C "' + target + '"'
+            shortcut.WorkingDirectory = cwd
+            shortcut.IconLocation = cwd + "\\bin\\MTB_logo.ico"
+            shortcut.WindowStyle = 1
+            shortcut.save()
 
 
 def unique(X):
