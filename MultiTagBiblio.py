@@ -163,7 +163,7 @@ class Biblio:
             text='Link Ref',
             height=1,
             width=10,
-            command=self.edit_notes_from_plan)
+            command=self.insert_ref)
         self.ref_but.place(x=1270, y=610)
 
         self.del_tag_but = Button(
@@ -263,7 +263,8 @@ class Biblio:
         self.shell_text = Text(
             window,
             height=28,
-            width=60)
+            width=60,
+            exportselection=False)
         self.shell_text.place(x=1000, y=40)
 
         self.notes_text = Text(
@@ -450,7 +451,6 @@ class Biblio:
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='Shell :')
         
-
     def add_plan_low(self):
         self.add_plan(order_option=1)
 
@@ -549,6 +549,16 @@ class Biblio:
         self.save_note_but.config(bg = '#f0f0f0')
         self.noting = 0
 
+    def insert_ref(self):
+        # get pointer position
+        sources = " ("
+        selected = self.source_listbox.curselection()
+        for k in selected:
+            sources += self.source_listbox.get(k) + " ; "
+        sources = sources[:-3]
+        sources += ")"
+        self.notes_text.insert(END, sources)
+
     # Blocs management
 
     def add_to_blocs(self):
@@ -637,7 +647,7 @@ class Biblio:
         self.tag_list = self.build_tag_list(self.blocs)
         selected = []
         source = self.source_listbox.curselection()
-        if len(source) == 0:
+        if len(self.blocs_listbox.curselection()) > 0:
             current = self.blocs_listbox.curselection()
             for k in current:
                 selected += [self.blocs_listbox.get(k)]
