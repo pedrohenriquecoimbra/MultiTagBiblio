@@ -408,7 +408,12 @@ class Biblio:
     def add_plan(self, order_option=0):
         # to be called on edit button press
         pos = self.plan_listbox.curselection()
-        current_order = self.plan["order"][self.plan["position"].index(pos[0])]
+        print(pos)
+        if len(pos) == 0:
+            current_order = 0
+            order_option = 0
+        else:
+            current_order = self.plan["order"][self.plan["position"].index(pos[0])]
         # Get plan tag name
         self.shell_text.delete("1.0", "end-1c")
         self.shell_label.configure(text='New category? :')
@@ -569,25 +574,22 @@ class Biblio:
         # Add if not in MultiTagBiblio
         sources, highlights, notes = self.zotero_import()
         for k in range(len(highlights)):
-            to_add = 1
-            for p in self.blocs["text"]:
-                if highlights[k] in p:
-                    to_add = 0
-                    break
             if highlights[k] == 'Just a note':
                 if "NOTE : " + notes[k] not in self.blocs['text']:
                     self.blocs['text'] += ["NOTE : " + notes[k]]
                     self.blocs['source'] += [sources[k]]
                     self.blocs['tag'] += [[]]
-
-            elif to_add == 1:
-                self.blocs['text'] += [highlights[k]]
-                self.blocs['source'] += [sources[k]]
-                self.blocs['tag'] += [[]]
-                if len(notes[k]) > 0:
-                    self.blocs['text'] += ["COM : " + notes[k]]
+            else:
+                if highlights[k] not in self.blocs['text']:
+                    self.blocs['text'] += [highlights[k]]
                     self.blocs['source'] += [sources[k]]
                     self.blocs['tag'] += [[]]
+                if len(notes[k]) > 0:
+                    if "COM : " + notes[k] not in self.blocs['text']:
+                        self.blocs['text'] += ["COM : " + notes[k]]
+                        self.blocs['source'] += [sources[k]]
+                        self.blocs['tag'] += [[]]
+                        
         
         # Delete if not in zotero
         deleted = 0
@@ -621,6 +623,8 @@ class Biblio:
 
         self.save_dict(self.p, 'blocs', self.blocs)
         self.blocs = self.import_dict(self.p, 'blocs')
+
+        print(len(self.blocs["text"]), len(self.blocs["source"]), len(self.blocs["tag"]))
 
         self.source_listbox.delete(0, END)
         for k in unique(self.blocs["source"]):
@@ -1023,20 +1027,20 @@ class Biblio:
         sources, highlights, notes = [], [], []
         for k in range(len(items_annotations)):
             items_annotations[k] = sorted(list(items_annotations[k]), key=lambda d: d[4])
-            skip = 0
-            for m in range(len(items_annotations[k])):
-                j = m + skip
-                if j < len(items_annotations[k]):
+
+            for j in range(len(items_annotations[k])):
+                if items_annotations[k][j][2] != None and items_annotations[k][j][3] == None:
+                    highlights += [items_annotations[k][j][2]]
+                    notes += ['']
                     sources += [source[k]]
-                    if items_annotations[k][j][2] != None and items_annotations[k][j][3] == None:
-                        highlights += [items_annotations[k][j][2]]
-                        notes += ['']
-                    elif items_annotations[k][j][2] == None and items_annotations[k][j][3] != None:
-                        highlights += ['Just a note']
-                        notes += [items_annotations[k][j][3]]
-                    elif items_annotations[k][j][2] != None and items_annotations[k][j][3] != None:
-                        highlights += [items_annotations[k][j][2]]
-                        notes += [items_annotations[k][j][3]]
+                elif items_annotations[k][j][2] == None and items_annotations[k][j][3] != None:
+                    highlights += ['Just a note']
+                    notes += [items_annotations[k][j][3]]
+                    sources += [source[k]]
+                elif items_annotations[k][j][2] != None and items_annotations[k][j][3] != None:
+                    highlights += [items_annotations[k][j][2]]
+                    notes += [items_annotations[k][j][3]]
+                    sources += [source[k]]
 
         return sources, highlights, notes
 
