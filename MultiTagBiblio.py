@@ -408,7 +408,6 @@ class Biblio:
     def add_plan(self, order_option=0):
         # to be called on edit button press
         pos = self.plan_listbox.curselection()
-        print(pos)
         if len(pos) == 0:
             current_order = 0
             order_option = 0
@@ -623,8 +622,6 @@ class Biblio:
 
         self.save_dict(self.p, 'blocs', self.blocs)
         self.blocs = self.import_dict(self.p, 'blocs')
-
-        print(len(self.blocs["text"]), len(self.blocs["source"]), len(self.blocs["tag"]))
 
         self.source_listbox.delete(0, END)
         for k in unique(self.blocs["source"]):
