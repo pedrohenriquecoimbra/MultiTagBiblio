@@ -20,7 +20,7 @@ An experimental semantic classification of all information blocs is also propose
 
 Double click *MultiTagBiblio.bat* for Windows users (or just execute *MultiTagBiblio.py* from terminal)
 
-This program is meant to use your Zotero local database as a starting point. On first use, point to your Zotero installation directory and mention the name of the parent collection in Zotero in which your papers are grouped. A proposition to create a shortcut will also be made. 
+This program is meant to use your Zotero local database as a starting point. On first use, point to your Zotero installation directory (usually C:\Users\yourname\Zotero) and mention the name of the parent collection in Zotero in which your papers are grouped. A proposition to create a shortcut will also be made. 
 
 On launch, click the *Import Zotero* button to get your last annotations. Please note Zotero should be closed to perform this action.
 
