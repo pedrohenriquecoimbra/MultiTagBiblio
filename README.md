@@ -41,4 +41,4 @@ You can use the *Search* button field to search all sentences from all articles.
 
 This is work in progress. Feel free to report a bug or request features.
 
-You can easily get last version double-clicking on *check_MAJ.bat*
+If connected to network, your program will update on start.
