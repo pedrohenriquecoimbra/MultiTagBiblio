@@ -1,8 +1,8 @@
 # MultiTagBiblio
 
-This program is thought as a tool to analyse a set of scientific papers under different scopes.
+This program is thought as a tool to analyse a set of scientific papers read with Zotero under different scopes.
 
-After text extraction from your pdf reader with comprehensive separators between elements (*Author* et al *year*), you end up with information blocs (referenced sentences) and associated notes taken during reading. This extraction is automatic if you provide this program your Zotero installation directory and the targetted collection. This program enables manual multitagging according to a user-built plan. Notes can be inserted in each plan category to summarize tagged information blocs.
+After text highlighting and commenting, you end up with information blocs (referenced sentences) and associated notes taken during reading. The extraction of these elements is automatic, thus you will be asked to provide this program your Zotero installation directory and the targetted collection. This program enables manual multitagging according to a user-built plan. Notes can be inserted in each plan category to summarize tagged information blocs.
 
 An experimental semantic classification of all information blocs is also proposed for new topics classification to emerge from a given bibliography.
 
@@ -18,9 +18,11 @@ An experimental semantic classification of all information blocs is also propose
 
 ## Usage
 
-Double click *run_MultiTagBiblio.bat* for Windows users (or just execute *MultiTagBiblio.py* from terminal)
+Double click *MultiTagBiblio.bat* for Windows users (or just execute *MultiTagBiblio.py* from terminal)
 
-This program is meant to use your Zotero local database as a starting point. On first use, point to your Zotero installation directory and mention the name of the parent collection in Zotero in which your papers are grouped. On launch, click the *Import Zotero* button to get your last annotations. Please note Zotero should be closed to perform this action.
+This program is meant to use your Zotero local database as a starting point. On first use, point to your Zotero installation directory and mention the name of the parent collection in Zotero in which your papers are grouped. A proposition to create a shortcut will also be made. 
+
+On launch, click the *Import Zotero* button to get your last annotations. Please note Zotero should be closed to perform this action.
 
 Then build a plan(s) related to your research questions in the left pane :
 Click the *Add* button to add a plan category. You can select a position in your existing plan to position the new element easily. Other button commands are comprehensive and enable structure modifications.
