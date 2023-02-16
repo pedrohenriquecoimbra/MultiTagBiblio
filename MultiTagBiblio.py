@@ -17,6 +17,7 @@ if not os.path.exists(p):
         nltk.download('wordnet')
 
 from tkinter import *
+import tkinter as tk
 from tkinter.filedialog import askdirectory
 import pickle
 import sqlite3
@@ -55,227 +56,281 @@ class Biblio:
         self.merge_var = IntVar()
 
         self.save_var = IntVar()
+        
+        self.mothermenu = tk.Frame(window, bg=BG_COLOR)
+        self.mothermenu.grid(row=0, column=0, sticky=tk.W + tk.E)
 
-        self.merge_tick = Checkbutton(
-            window,
-            text='Merge ?',
-            variable=self.merge_var)
-        self.merge_tick.place(x=750, y=500)
-
-        self.input_but = Button(
-            window,
-            text='Import Zot',
-            height=1,
-            width=9,
-            command=self.add_to_blocs)
-        self.input_but.place(x=380, y=460)
-
-        self.info_but = Button(
-            window,
-            text='Info',
-            height=1,
-            width=9,
-            command=self.send_key)
-        self.info_but.place(x=470, y=460)
-
-        self.del_art_but = Button(
-            window,
-            text='Remove',
-            height=1,
-            width=7,
-            command=self.delete_article)
-        self.del_art_but.place(x=430, y=510)
-
-        self.tag_but = Button(
-            window,
-            text='Tagging',
+        tk.Button(
+            self.mothermenu,
+            text='Locate Zotero',
             height=1,
             width=10,
-            command=self.tag_blocs)
-        self.tag_but.place(x=650, y=500)
+            command=self.locate_zotero).grid(row=0, column=0, sticky=tk.W)
+        
+        self.zotero_path = tk.StringVar()
+        self.zotero_path.set(
+            self.zotero['path'] if self.zotero else 'Not yet connected to Zotero.')
+        self.show_zotero_path = tk.Label(
+            self.mothermenu, textvariable=self.zotero_path)
+        self.show_zotero_path.grid(row=0, column=1, sticky=tk.W+tk.E)
+        
+        display1 = tk.Frame(window, bg=BG_COLOR)
+        display1.grid(row=1, column=0)
 
-        self.up_but = Button(
-            window,
+        display1arrow = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1arrow.grid(row=0, column=0)
+
+        tk.Button(
+            display1arrow,
             text='^',
             height=1,
             width=3,
-            command=self.move_up_plan)
-        self.up_but.place(x=10, y=450)
+            command=self.move_up_plan).grid(row=0, column=1)
 
-        self.down_but = Button(
-            window,
+        tk.Button(
+            display1arrow,
             text='v',
             height=1,
             width=3,
-            command=self.move_down_plan)
-        self.down_but.place(x=10, y=480)
+            command=self.move_down_plan).grid(row=2, column=1)
 
-        self.left_but = Button(
-            window,
+        tk.Button(
+            display1arrow,
             text='<',
             height=1,
             width=3,
-            command=self.move_left_plan)
-        self.left_but.place(x=10, y=515)
+            command=self.move_left_plan).grid(row=1, column=0)
 
-        self.right_but = Button(
-            window,
+        tk.Button(
+            display1arrow,
             text='>',
             height=1,
             width=3,
-            command=self.move_right_plan)
-        self.right_but.place(x=45, y=515)
+            command=self.move_right_plan).grid(row=1, column=2)
 
-        self.add_tag_but = Button(
-            window,
-            text='Add here',
-            height=1,
-            width=7,
-            command=self.add_plan)
-        self.add_tag_but.place(x=150, y=500)
-
-        self.add_low_tag_but = Button(
-            window,
-            text='-> add lower',
-            height=1,
-            width=11,
-            command=self.add_plan_low)
-        self.add_low_tag_but.place(x=180, y=530)
-
-        self.add_high_tag_but = Button(
-            window,
-            text='add upper <-',
-            height=1,
-            width=11,
-            command=self.add_plan_high)
-        self.add_high_tag_but.place(x=90, y=530)
-
-        self.take_note_but = Button(
-            window,
-            text='Take notes',
-            height=1,
-            width=10,
-            command=self.edit_notes_from_plan)
-        self.take_note_but.place(x=1270, y=570)
-
-        self.ref_but = Button(
-            window,
-            text='Link Ref',
-            height=1,
-            width=10,
-            command=self.insert_ref)
-        self.ref_but.place(x=1270, y=610)
-
-        self.del_tag_but = Button(
-            window,
-            text='Delete',
-            height=1,
-            width=7,
-            command=self.delete_plan)
-        self.del_tag_but.place(x=290, y=530)
-
-        self.edit_tag_but = Button(
-            window,
-            text='Edit',
-            height=1,
-            width=7,
-            command=self.edit_plan)
-        self.edit_tag_but.place(x=290, y=500)
-
-        self.search_but = Button(
-            window,
-            text='Search',
-            height=1,
-            width=7,
-            command=self.blocs_filter_search)
-        self.search_but.place(x=1310, y=500)
-
-        self.topics_but = Button(
-            window,
-            text='Topics',
-            height=1,
-            width=7,
-            command=self.blocs_main_subjects)
-        self.topics_but.place(x=1380, y=500)
-
-        self.save_note_but = Button(
-            window,
-            text='Save',
-            height=1,
-            width=10,
-            command=lambda: self.save_var.set(1))
-        self.save_note_but.place(x=1270, y=650)
-
-        self.export_but = Button(
-            window,
-            text='Export all',
-            height=1,
-            width=10,
-            command=self.export_all)
-        self.export_but.place(x=1430, y=700)
-
-        self.backup_but = Button(
-            window,
-            text='Backup',
-            height=1,
-            width=10,
-            command=self.backup)
-        self.backup_but.place(x=1430, y=750)
+        display1plan = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1plan.grid(row=0, column=1, sticky=tk.W + tk.E)
 
         self.plan_listbox = Listbox(
-            window,
+            display1plan,
             height=30,
             width=50,
             selectmode=EXTENDED)
-        self.plan_listbox.place(x=50, y=10)
+        self.plan_listbox.grid(row=0, column=0)
         new = self.build_plan()
         for k in range(len(new)):
             self.plan_listbox.insert(k, new[k])
         self.plan_listbox.bind('<<ListboxSelect>>', self.blocs_filter_plan)
 
+        display1planmenu = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1planmenu.grid(row=1, column=1, sticky=tk.W + tk.E)
+
+        display1planmenu1 = tk.Frame(display1planmenu, bg=BG_COLOR)
+        display1planmenu1.grid(row=0, column=0)
+        tk.Button(
+            display1planmenu1,
+            text='Add here',
+            height=1,
+            width=7,
+            command=self.add_plan).grid(row=0, column=0)
+
+        display1planmenu11 = tk.Frame(
+            display1planmenu1)
+        display1planmenu11.grid()
+        tk.Button(
+            display1planmenu11,
+            text='-> add lower',
+            height=1,
+            width=11,
+            command=self.add_plan_low).grid(row=1, column=0)
+
+        tk.Button(
+            display1planmenu11,
+            text='add upper <-',
+            height=1,
+            width=11,
+            command=self.add_plan_high).grid(row=1, column=1)
+            
+        display1planmenu2 = tk.Frame(display1planmenu)
+        display1planmenu2.grid(row=0, column=1)
+        
+        tk.Button(
+            display1planmenu2,
+            text='Delete',
+            height=1,
+            width=7,
+            command=self.delete_plan).grid(row=0, column=0, sticky=tk.E)
+
+        tk.Button(
+            display1planmenu2,
+            text='Edit',
+            height=1,
+            width=7,
+            command=self.edit_plan).grid(row=1, column=0, sticky=tk.E)
+
+        display1source = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1source.grid(row=0, column=2)
+
         self.source_listbox = Listbox(
-            window,
-            height=27,
+            display1source,
+            height=30,
             width=20,
             selectmode=EXTENDED)
-        self.source_listbox.place(x=400, y=10)
+        self.source_listbox.grid(row=0, column=0)
         for k in unique(self.blocs["source"]):
             self.source_listbox.insert(END, k[0])
         self.source_listbox.bind('<<ListboxSelect>>', self.blocs_filter_sources)
 
+        display1sourcemenu = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1sourcemenu.grid(row=1, column=2)
+
+        importzoterohighlight = tk.Frame(
+            display1sourcemenu, bg='red', bd=1)
+        importzoterohighlight.grid(row=0, column=0, sticky=tk.W + tk.E)
+        tk.Button(
+            importzoterohighlight,
+            text='Import Zot',
+            height=1,
+            width=9,
+            command=self.add_to_blocs).grid(row=0, column=0, sticky=tk.W + tk.E)
+            
+        tk.Button(
+            display1sourcemenu,
+            text='Info',
+            height=1,
+            width=9,
+            command=self.send_key).grid(row=0, column=1, sticky=tk.W + tk.E)
+
+        tk.Button(
+            display1sourcemenu,
+            text='Remove',
+            height=1,
+            width=7,
+            command=self.delete_article).grid(row=1, column=0, sticky=tk.W + tk.E)
+
+        display1blocs = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1blocs.grid(row=0, column=3)
+
         self.blocs_listbox = Listbox(
-            window,
+            display1blocs,
             height=30,
             width=60,
             selectmode=EXTENDED)
-        self.blocs_listbox.place(x=550, y=10)
+        self.blocs_listbox.grid(row=0, column=0)
         self.blocs_listbox.bind('<<ListboxSelect>>', self.read_blocs)
 
-        self.search_text = Text(
-            window,
-            height=1,
-            width=30)
-        self.search_text.place(x=1050, y=500)
+        display1blocsoptions = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1blocsoptions.grid(row=1, column=3)
 
-        self.shell_label = Label(window, text="Shell :")
-        self.shell_label.place(x=1000, y=10)
+        tk.Button(
+            display1blocsoptions,
+            text='Tagging',
+            height=1,
+            width=10,
+            command=self.tag_blocs).grid(row=0, column=0)
+
+        tk.Checkbutton(
+            display1blocsoptions,
+            text='Merge ?',
+            bg=BG_COLOR,
+            variable=self.merge_var).grid(row=0, column=1)
+
+        display1shell = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1shell.grid(row=0, column=4, sticky=tk.N + tk.S)
+
+        self.shell_label = Label(display1shell, text="Shell :", bg=BG_COLOR)
+        self.shell_label.grid(row=0, column=0, sticky=tk.W)
 
         self.shell_text = Text(
-            window,
-            height=23,
+            display1shell,
+            #height=23,
             width=60,
             exportselection=False,
             wrap=WORD,
-            font=('Calibri',12))
-        self.shell_text.place(x=1000, y=40)
+            font=('Calibri', 12))
+        self.shell_text.grid(row=1, column=0, sticky=tk.S)
+
+        display1shelloptions = tk.Frame(display1, bg=BG_COLOR, bd=10)
+        display1shelloptions.grid(row=1, column=4, sticky=tk.W)
+
+        self.search_text = Text(
+            display1shelloptions,
+            height=1,
+            width=40)
+        self.search_text.grid(row=0, column=0)
+
+        self.search_but = Button(
+            display1shelloptions,
+            text='Search',
+            height=1,
+            width=7,
+            command=self.blocs_filter_search)
+        self.search_but.grid(row=0, column=1, sticky=tk.E)
+
+        self.topics_but = Button(
+            display1shelloptions,
+            text='Topics',
+            height=1,
+            width=7,
+            command=self.blocs_main_subjects)
+        self.topics_but.grid(row=0, column=2, sticky=tk.E)
+        
+        display2 = tk.Frame(window, bg=BG_COLOR)
+        display2.grid(row=2, column=0, sticky=tk.W + tk.E)
+
+        display2note = tk.Frame(display2, bg=BG_COLOR, bd=10)
+        display2note.grid(row=0, column=0, sticky=tk.W)
 
         self.notes_text = Text(
-            window,
+            display2note,
             height=11,
             width=150,
             wrap=WORD,
             font=('Calibri',12))
-        self.notes_text.place(x=50, y=560)
+        self.notes_text.grid(row=0, column=0)
+
+        display2menu = tk.Frame(display2, bg=BG_COLOR, bd=10)
+        display2menu.grid(row=0, column=1, sticky=tk.W + tk.E)
+
+        self.take_note_but = tk.Button(
+            display2menu,
+            text='Take notes',
+            height=1,
+            width=10,
+            command=self.edit_notes_from_plan)
+        self.take_note_but.grid(row=0, column=0)
+
+        self.ref_but = Button(
+            display2menu,
+            text='Link Ref',
+            height=1,
+            width=10,
+            command=self.insert_ref)
+        self.ref_but.grid(row=1, column=0)
+
+        self.save_note_but = Button(
+            display2menu,
+            text='Save',
+            height=1,
+            width=10,
+            command=lambda: self.save_var.set(1))
+        self.save_note_but.grid(row=2, column=0)
+
+        self.export_but = Button(
+            display2menu,
+            text='Export all',
+            height=1,
+            width=10,
+            command=self.export_all)
+        self.export_but.grid(row=3, column=1)
+
+        self.backup_but = Button(
+            display2menu,
+            text='Backup',
+            height=1,
+            width=10,
+            command=self.backup)
+        self.backup_but.grid(row=4, column=1)
 
     # Dictionary management
 
@@ -945,6 +1000,18 @@ class Biblio:
 
     # Exchanges with Zotero
 
+    def locate_zotero(self):
+        path = askdirectory(parent=self.window, title='Select Zotero folder location')
+        target_collection = tk.simpledialog.askstring(
+            "Zotero collection", "Enter the parent Zotero collection you are working with : ")
+        d = dict(path=path, target_collection=target_collection)
+        with open(p + "\\Zotero_data.pkl", 'wb') as f:
+            pickle.dump(d, f)
+        
+        self.zotero = self.import_dict(self.p, 'Zotero_data')
+        self.zotero_path.set(self.zotero['path'] if self.zotero else 'Not yet connected to Zotero.')
+        return
+
     def zotero_import(self):
         # standard database connection
         conn = sqlite3.connect(self.zotero['path'] + '/zotero.sqlite')
@@ -1170,6 +1237,9 @@ def init_dict():
         with open(p + "\\plan.pkl", 'wb') as f:
             pickle.dump(d, f)
 
+        with open(p + "\\Zotero_data.pkl", 'wb') as f:
+            pickle.dump({}, f)
+        """
         print('No Zotero folder found')
         dialog = Tk()
         dialog.withdraw()
@@ -1179,6 +1249,7 @@ def init_dict():
         d = dict(path=path, target_collection=target_collection)
         with open(p + "\\Zotero_data.pkl", 'wb') as f:
             pickle.dump(d, f)
+        """
     if not os.path.exists(cwd + "\\docx"):
         os.makedirs(cwd + "\\docx")
     if not os.path.exists(cwd + "\\Backup"):
@@ -1214,11 +1285,13 @@ def unique(X):
 myappid = 'inrae.multitagbiblio.zotero.1.0' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
+BG_COLOR = '#96CDCD'
+
 init_dict()
 win = Tk()
 win.title('Multi Tag Biblio')
 win.state('zoomed')
-win.configure(bg='#96CDCD')
+win.configure(bg=BG_COLOR, bd=10)
 win.iconbitmap("bin\\MTB_logo.ico")
 mt = Biblio(win)
 win.mainloop()
